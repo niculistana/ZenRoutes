@@ -1,0 +1,15 @@
+@import url(../assets/fonts/times_sans_serif.ttf);
+@import url(https://fonts.googleapis.com/css?family=Heebo:300,400,600);
+.content {
+  left: 50%;
+  transform: translateX(-50%); }
+
+#map {
+  height: 500px; }
+
+.content {
+  position: absolute;
+  width: 80%;
+  height: auto; }
+
+/*# sourceMappingURL=main.css.map */

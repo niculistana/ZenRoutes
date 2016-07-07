@@ -1,0 +1,16 @@
+@import url(../assets/fonts/times_sans_serif.ttf);
+@import url(https://fonts.googleapis.com/css?family=Heebo:300,400,600);
+@import "helpers/_variables.scss";
+@import "helpers/_placeholders.scss";
+@import "helpers/_mixins.scss";
+
+#map {
+	height:500px;
+}
+
+.content {
+	@extend %center_horizontally;
+	position: absolute;
+	width: 80%;
+	height: auto;
+}

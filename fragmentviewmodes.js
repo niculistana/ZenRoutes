@@ -1,7 +1,7 @@
 var DomEvents = require('./domevents');
 var Strings = require('./strings');
 
-ViewModes = function(){
+var SearchViewMode = function(){
 	var goButtonText = Strings.GO_BUTTON_TEXT;
 	var settingsButtonText = Strings.SETTINGS_BUTTON_TEXT;
 
@@ -21,7 +21,9 @@ ViewModes = function(){
 				DomEvents.SearchEvents.searchForPlaces();
 			});
 
-			search_history.innerHTML = 'Search History: ' + localStorage.getItem('test');
+			search_history.innerHTML = 
+				localStorage.getItem('queryCache') ? 'Recent searches: ' 
+				+ JSON.parse(localStorage.getItem('queryCache')).slice(0, 5).join(' | ') : '<br />';
 
 			fragment.appendChild(search_input);
 			fragment.appendChild(search_button);
@@ -50,16 +52,20 @@ ViewModes = function(){
 			fragment.appendChild(search_input);
 			fragment.appendChild(search_button);
 			fragment.appendChild(search_settings_button);
-		},
+		}
+	}
+};
 
-		placesAsCardList: function(list, fragment) {
+var ResultsViewMode = function(resultList) {
+	return {
+		resultsAsCardList: function(fragment) {
 			var place_card = document.createElement('div');
 			var place_info = document.createElement('div');
 
 			fragment.appendChild(place_card);
 			place_card.appendChild(place_info);
 
-			list.forEach(function(e) {
+			resultList.forEach(function(e) {
 				var place_name = document.createElement('h1');
 				var miles_away = document.createElement('p');
 				var save_button = document.createElement('button');
@@ -74,7 +80,7 @@ ViewModes = function(){
 			});
 		},
 
-		placesAsTable: function(list, fragment) {
+		resultsAsTable: function(fragment) {
 			var table = document.createElement('table');
 			table.setAttribute('class', 'table table-hover table-responsive');
 			
@@ -88,13 +94,13 @@ ViewModes = function(){
 			thead.appendChild(tr_head);
 			table.appendChild(tbody);
 
-			for (var key in list[0]) {
+			for (var key in resultList[0]) {
 				var th = document.createElement('th');
 				th.innerHTML += key;
 				tr_head.appendChild(th);
 			}
 
-			list.forEach(function(e) {
+			resultList.forEach(function(e) {
 				var tr_body = document.createElement('tr');
 				for (var key in e) {
 					if (e.hasOwnProperty(key)) {
@@ -105,6 +111,9 @@ ViewModes = function(){
 			});
 		}
 	}
-}();
+};
 
-module.exports = ViewModes;
+module.exports = {
+	SearchViewMode,
+	ResultsViewMode
+}

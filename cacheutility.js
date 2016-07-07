@@ -5,7 +5,7 @@ CacheUtility = function() {
 	var queryCacheKey = Constants.QUERY_CACHE_KEY;
 	return {
 		storeQuery: function(query) {
-			Globals.queryCache.push(query);
+			Globals.queryCache.unshift(query);
 			localStorage.setItem(queryCacheKey, JSON.stringify(Globals.queryCache));
 		},
 		clearQueryCache: function() {

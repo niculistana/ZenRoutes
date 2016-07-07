@@ -6,7 +6,9 @@ Globals = function () {
 		current_search_view: Constants.INLINE,
 		queries: [],
 		results: [],
-		queryCache: [],
+		resultsCart:[],
+		markers:[],
+		queryCache: (localStorage.getItem('queryCache')) ? JSON.parse(localStorage.getItem('queryCache')) : [],
 		resultsCache: []
 	};
 }();

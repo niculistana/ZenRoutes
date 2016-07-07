@@ -23,7 +23,7 @@ CacheUtility = function() {
 	var queryCacheKey = Constants.QUERY_CACHE_KEY;
 	return {
 		storeQuery: function(query) {
-			Globals.queryCache.push(query);
+			Globals.queryCache.unshift(query);
 			localStorage.setItem(queryCacheKey, JSON.stringify(Globals.queryCache));
 		},
 		clearQueryCache: function() {
@@ -33,7 +33,7 @@ CacheUtility = function() {
 }();
 
 module.exports = CacheUtility;
-},{"./constants":3,"./globals":6}],3:[function(require,module,exports){
+},{"./constants":3,"./globals":7}],3:[function(require,module,exports){
 const INLINE = 'inline';
 const DEFAULT = 'default';
 
@@ -53,6 +53,9 @@ module.exports = {
 };
 },{}],4:[function(require,module,exports){
 var CacheUtility = require('./cacheutility');
+var MapLoader = require('./maploader');
+var MapComposer = require('./mapcomposer');
+var MapViewModes = require('./mapviewmodes');
 
 SearchEvents = function() {
 	return {
@@ -63,12 +66,61 @@ SearchEvents = function() {
 			}
 		},
 
-		searchForPlaces: function () {
+		searchForPlaces: function() {
 			var searchInput = document.getElementById('search-input');
 			var query = searchInput.value;
 
 			if (query.length > 0) {
 				CacheUtility.storeQuery(query);
+
+				var geocoder = new google.maps.Geocoder();
+
+				MapViewModes.MarkerViewMode().clearAllMarkers();
+
+				geocoder.geocode({'address': query}, function(results, status) {
+					if (status === google.maps.GeocoderStatus.OK) {
+						var originLocation = results[0].geometry.location;
+
+						MapComposer.composeOriginMarker(originLocation);
+
+						var request = {
+							location: originLocation,
+							radius: 12000,
+							keyword: "tourist",
+							types: "point_of_interest|establishment|natural_feature|park|zoo|aquarium|art_gallery|book_store|museum|spa|university"
+						};
+
+						var service = new google.maps.places.PlacesService(map);
+						service.nearbySearch(request, function (results, status) {
+							if (status === google.maps.places.PlacesServiceStatus.OK) {
+								console.log(results.length);
+								results.forEach(function(result, index) {
+									(function(index) {
+										setTimeout(function() {	// delay due to api query limit restrictions
+											service.getDetails({
+												placeId: result.place_id
+											}, function(result, status){
+												if (status === google.maps.places.PlacesServiceStatus.OK) {
+													if (result.geometry && !result.permanently_closed && !result.types.includes("travel_agency")
+														&& !result.types.includes("lodging") && !result.types.includes("real_estate_agency") 
+														&& !result.types.includes("gym") && !result.types.includes("food")
+														&& !result.types.includes("embassy") && !result.types.includes("insurance_agency")) {
+														MapComposer.composeResultMarker(result);
+													}
+												}
+												else{
+													console.log("PlacesService was not successful for the following reason: " + status);
+												}
+											});
+										}, index * 400);
+									})(index);
+								});
+							} else {
+								console.log("nearbySearch was not successful for the following reason: " + status);
+							}
+						});
+					}
+				});
 			}
 		}
 	}
@@ -77,103 +129,45 @@ SearchEvents = function() {
 module.exports = {
 	SearchEvents
 };
-},{"./cacheutility":2}],5:[function(require,module,exports){
+},{"./cacheutility":2,"./mapcomposer":9,"./maploader":10,"./mapviewmodes":11}],5:[function(require,module,exports){
 var Constants = require('./constants');
-var ViewModes = require('./viewmodes');
+var FragmentViewModes = require('./fragmentviewmodes');
 
 FragmentComposer = function() {
-	var main_content = document.getElementById('main-content');
-	var viewModeAlert = document.createElement('div');
+	var mainContent = document.getElementById('main-content');
 	return {
 		composeSearchFragment: function(fragment, viewMode) {
+			var viewModeAlert = document.createElement('div');
 			viewModeAlert.setAttribute('class', 'alert alert-success fade in');
 			viewModeAlert.innerHTML = '<a href="#" class="close" data-dismiss="alert"' + 
 				'aria-label="close">&times;</a>';
 
 			if (viewMode === Constants.DEFAULT) {
-				ViewModes.searchAsDefault(fragment);
+				FragmentViewModes.SearchViewMode().searchAsDefault(fragment);
 				viewModeAlert.innerHTML += '<strong>Default search</strong>';
 			} else if (viewMode === Constants.INLINE) {
-				ViewModes.searchAsInline(fragment);
+				FragmentViewModes.SearchViewMode().searchAsInline(fragment);
 				viewModeAlert.innerHTML += '<strong>Inline search</strong>';
 			}
-			main_content.insertBefore(viewModeAlert, main_content.firstChild);
+			mainContent.insertBefore(viewModeAlert, mainContent.firstChild);
 		},
 
-		composePlacesFragment: function (list, fragment, viewMode) {
+		composeResultsFragment: function (list, fragment, viewMode) {
 			if (viewMode === Constants.CARDS_LIST) {
-				ViewModes.placesAsCardList(list, fragment);
+				FragmentViewModes.ResultsViewMode().resultsAsCardList(list, fragment);
 			} else if (viewMode === Constants.TABLE) {
-				ViewModes.placesAsTable(list, fragment);
+				FragmentViewModes.ResultsViewMode().resultsAsTable(list, fragment);
 			}
 		}
 	};
 }();
 
 module.exports = FragmentComposer;
-},{"./constants":3,"./viewmodes":9}],6:[function(require,module,exports){
-var Constants = require('./constants');
-
-Globals = function () {
-	return  {
-		current_results_view: Constants.CARDS_LIST,
-		current_search_view: Constants.INLINE,
-		queries: [],
-		results: [],
-		queryCache: [],
-		resultsCache: []
-	};
-}();
-
-module.exports = Globals;
-},{"./constants":3}],7:[function(require,module,exports){
-'use strict';
-var ApiConnection = require('./apiconnection');
-var Globals = require('./globals.js');
-var Constants = require('./constants');
-var FragmentComposer = require('./fragmentcomposer.js');
-
-if (document.readyState !== "loading") {
-	initData();
-} else {
-	document.addEventListener('DOMContentLoaded', function() {
-		initData();
-	}, false);
-}
-
-ApiConnection.connect('https://maps.googleapis.com/maps/api/js?'+
-	'key=AIzaSyBgESRsFdB2XZSZtPhiVnKWzG0JeR-nGGM&callback=initGoogleMapApi&'+
-	'libraries=places', 'initGoogleMapApi', initSearch);
-
-function initData() {
-	var search = document.getElementById('search');
-	var searchFragment = document.createDocumentFragment();
-
-	search.innerHTML = '';
-	FragmentComposer.composeSearchFragment(searchFragment, Constants.DEFAULT);
-	search.appendChild(searchFragment);
-}
-
-function initSearch() {
-	var search = document.getElementById('search');
-	var searchInput = document.getElementById('search-input');
-	var autocomplete = new google.maps.places.Autocomplete(searchInput, {
-		types: ['(cities)']
-	});
-}
-},{"./apiconnection":1,"./constants":3,"./fragmentcomposer.js":5,"./globals.js":6}],8:[function(require,module,exports){
-const GO_BUTTON_TEXT = 'GO';
-const SETTINGS_BUTTON_TEXT = 'SETTINGS';
-
-module.exports = {
-	GO_BUTTON_TEXT,
-	SETTINGS_BUTTON_TEXT
-};
-},{}],9:[function(require,module,exports){
+},{"./constants":3,"./fragmentviewmodes":6}],6:[function(require,module,exports){
 var DomEvents = require('./domevents');
 var Strings = require('./strings');
 
-ViewModes = function(){
+var SearchViewMode = function(){
 	var goButtonText = Strings.GO_BUTTON_TEXT;
 	var settingsButtonText = Strings.SETTINGS_BUTTON_TEXT;
 
@@ -193,7 +187,9 @@ ViewModes = function(){
 				DomEvents.SearchEvents.searchForPlaces();
 			});
 
-			search_history.innerHTML = 'Search History: ' + localStorage.getItem('test');
+			search_history.innerHTML = 
+				localStorage.getItem('queryCache') ? 'Recent searches: ' 
+				+ JSON.parse(localStorage.getItem('queryCache')).slice(0, 5).join(' | ') : '<br />';
 
 			fragment.appendChild(search_input);
 			fragment.appendChild(search_button);
@@ -222,16 +218,20 @@ ViewModes = function(){
 			fragment.appendChild(search_input);
 			fragment.appendChild(search_button);
 			fragment.appendChild(search_settings_button);
-		},
+		}
+	}
+};
 
-		placesAsCardList: function(list, fragment) {
+var ResultsViewMode = function(resultList) {
+	return {
+		resultsAsCardList: function(fragment) {
 			var place_card = document.createElement('div');
 			var place_info = document.createElement('div');
 
 			fragment.appendChild(place_card);
 			place_card.appendChild(place_info);
 
-			list.forEach(function(e) {
+			resultList.forEach(function(e) {
 				var place_name = document.createElement('h1');
 				var miles_away = document.createElement('p');
 				var save_button = document.createElement('button');
@@ -246,7 +246,7 @@ ViewModes = function(){
 			});
 		},
 
-		placesAsTable: function(list, fragment) {
+		resultsAsTable: function(fragment) {
 			var table = document.createElement('table');
 			table.setAttribute('class', 'table table-hover table-responsive');
 			
@@ -260,13 +260,13 @@ ViewModes = function(){
 			thead.appendChild(tr_head);
 			table.appendChild(tbody);
 
-			for (var key in list[0]) {
+			for (var key in resultList[0]) {
 				var th = document.createElement('th');
 				th.innerHTML += key;
 				tr_head.appendChild(th);
 			}
 
-			list.forEach(function(e) {
+			resultList.forEach(function(e) {
 				var tr_body = document.createElement('tr');
 				for (var key in e) {
 					if (e.hasOwnProperty(key)) {
@@ -277,7 +277,222 @@ ViewModes = function(){
 			});
 		}
 	}
+};
+
+module.exports = {
+	SearchViewMode,
+	ResultsViewMode
+}
+},{"./domevents":4,"./strings":12}],7:[function(require,module,exports){
+var Constants = require('./constants');
+
+Globals = function () {
+	return  {
+		current_results_view: Constants.CARDS_LIST,
+		current_search_view: Constants.INLINE,
+		queries: [],
+		results: [],
+		resultsCart:[],
+		markers:[],
+		queryCache: (localStorage.getItem('queryCache')) ? JSON.parse(localStorage.getItem('queryCache')) : [],
+		resultsCache: []
+	};
 }();
 
-module.exports = ViewModes;
-},{"./domevents":4,"./strings":8}]},{},[7]);
+module.exports = Globals;
+},{"./constants":3}],8:[function(require,module,exports){
+'use strict';
+var ApiConnection = require('./apiconnection');
+var Globals = require('./globals.js');
+var Constants = require('./constants');
+var FragmentComposer = require('./fragmentcomposer.js');
+var MapLoader = require('./maploader.js');
+
+if (document.readyState !== "loading") {
+	initData();
+} else {
+	document.addEventListener('DOMContentLoaded', function() {
+		initData();
+	}, false);
+}
+
+ApiConnection.connect('https://maps.googleapis.com/maps/api/js?'+
+	'key=AIzaSyBgESRsFdB2XZSZtPhiVnKWzG0JeR-nGGM&callback=initGoogleMapApi&'+
+	'libraries=places', 'initGoogleMapApi', initComponents);
+
+function initData() {
+	console.log('initData');
+};
+
+function initComponents() {
+	var search = document.getElementById('search');
+	var searchFragment = document.createDocumentFragment();
+
+	search.innerHTML = '';
+	FragmentComposer.composeSearchFragment(searchFragment, Constants.DEFAULT);
+	search.appendChild(searchFragment);
+
+	var searchInput = document.getElementById('search-input');
+	var autocomplete = new google.maps.places.Autocomplete(searchInput, {
+		types: ['address']
+	});
+
+
+	var styles = [{"featureType":"poi","elementType":"geometry","stylers":[{"color":"#E8DED1"}]},
+		{"featureType":"landscape","elementType":"geometry","stylers":[{"color":"#E8D7D1"}]},
+		{"featureType":"road.highway","elementType":"geometry","stylers":[{"lightness":60},{"color":"#BCB4B5"}]},
+		{"featureType":"water","stylers":[{"color":"#4397CE"}]}]
+
+
+	// Create a new StyledMapType object, passing it the array of styles,
+	// as well as the name to be displayed on the map type control.
+	var styledMap = new google.maps.StyledMapType(styles,
+	{name: "Styled Map"});
+
+	// Create a map object, and include the MapTypeId to add
+	// to the map type control.
+	var mapOptions = {
+		zoom: 13,
+		center: new google.maps.LatLng(37.7843179, -122.3951441),
+		mapTypeControlOptions: {
+			mapTypeIds: [google.maps.MapTypeId.ROADMAP, 'map_style']
+		},
+		minZoom: 7,
+		maxZoom: 17
+	};
+
+	window.map = new google.maps.Map(document.getElementById('map'), mapOptions);
+
+	//Associate the styled map with the MapTypeId and set it to display.
+	map.mapTypes.set('map_style', styledMap);
+	map.setMapTypeId('map_style');
+
+
+	// MapLoader.loadMap('map', -33.8688, 151.2195);
+
+	// geocoder.geocode({'address': query}), function(results, status) {
+	// 	console.log(results);
+	// 	console.log(status);
+	// }
+};
+},{"./apiconnection":1,"./constants":3,"./fragmentcomposer.js":5,"./globals.js":7,"./maploader.js":10}],9:[function(require,module,exports){
+var Constants = require('./constants');
+var Globals = require('./globals');
+
+MapComposer = function() {
+	var mainContent = document.getElementById('main-content');
+
+	return {
+		composeOriginMarker: function(location) {
+			var marker = new google.maps.Marker({
+				map: window.map,
+				position: location,
+				animation: google.maps.Animation.DROP
+			});	
+
+			map.setCenter(location);
+			Globals.markers.push(marker);
+		},
+
+		composeResultMarker: function(result) {
+			var defaultIcon = {
+				url: result.icon,
+				scaledSize: new google.maps.Size(35, 35),
+				origin: new google.maps.Point(0, 0),
+				anchor: new google.maps.Point(15, 15)
+			};
+
+			console.log(defaultIcon);
+
+			var marker = new google.maps.Marker({
+				map: window.map,
+				position: result.geometry.location,
+				animation: google.maps.Animation.DROP,
+				icon: (result.photos) ? result.photos[0].getUrl({'maxWidth': 35, 'maxHeight': 35}) : defaultIcon
+			});	
+			Globals.markers.push(marker);
+		}
+	};
+}();
+
+module.exports = MapComposer;
+},{"./constants":3,"./globals":7}],10:[function(require,module,exports){
+MapLoader = function() {
+	return {
+		loadMap: function (domElementId, lat, lng){
+			var origin = new google.maps.LatLng(lat,lng);
+
+			var myMapOptions = {
+				scrollwheel:false,
+				zoom: 15,
+				center: origin,
+				mapTypeControl: true,
+				mapTypeControlOptions: {
+				style: google.maps.MapTypeControlStyle.DROPDOWN_MENU,
+				position: google.maps.ControlPosition.RIGHT_TOP
+				},
+				navigationControl: true,
+				navigationControlOptions: {
+				style: google.maps.NavigationControlStyle.SMALL,
+				position: google.maps.ControlPosition.LEFT_CENTER
+				},
+				mapTypeId: google.maps.MapTypeId.ROADMAP
+			};
+
+			var map = new google.maps.Map(document.getElementById(domElementId),myMapOptions);
+
+			return({
+				container:map.getDiv(),
+				map:map
+			});
+		}
+	}
+}();
+
+module.exports = MapLoader;
+},{}],11:[function(require,module,exports){
+var DomEvents = require('./domevents');
+var Strings = require('./strings');
+var Globals = require('./globals');
+
+var MarkerViewMode = function() {
+	return {
+		markerAsAll: function() {
+			console.log('markerAsAll ' , resultList);
+		},
+		markerAsSelected: function() {
+			console.log('markerAsSelected ' , resultList);
+		},
+		markerAsNotSelected: function() {
+			console.log('markerAsNotSelected ' , resultList);
+		},
+		clearAllMarkers: function() {
+			for (var i = 0; i < Globals.markers.length; i++ ) {
+				Globals.markers[i].setMap(null);
+			}
+			Globals.markers = [];
+			console.log('clearing');
+		}	
+	}
+};
+
+var InfoWindowViewMode = function(map, resultList) {
+};
+
+module.exports = {
+	MarkerViewMode,
+	InfoWindowViewMode
+}
+
+
+},{"./domevents":4,"./globals":7,"./strings":12}],12:[function(require,module,exports){
+const GO_BUTTON_TEXT = 'GO';
+const SETTINGS_BUTTON_TEXT = 'SETTINGS';
+
+const ALERT_DEFAULT = 'DEFAULT';
+
+module.exports = {
+	GO_BUTTON_TEXT,
+	SETTINGS_BUTTON_TEXT
+};
+},{}]},{},[8]);

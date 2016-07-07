@@ -1,30 +1,30 @@
 var Constants = require('./constants');
-var ViewModes = require('./viewmodes');
+var FragmentViewModes = require('./fragmentviewmodes');
 
 FragmentComposer = function() {
-	var main_content = document.getElementById('main-content');
-	var viewModeAlert = document.createElement('div');
+	var mainContent = document.getElementById('main-content');
 	return {
 		composeSearchFragment: function(fragment, viewMode) {
+			var viewModeAlert = document.createElement('div');
 			viewModeAlert.setAttribute('class', 'alert alert-success fade in');
 			viewModeAlert.innerHTML = '<a href="#" class="close" data-dismiss="alert"' + 
 				'aria-label="close">&times;</a>';
 
 			if (viewMode === Constants.DEFAULT) {
-				ViewModes.searchAsDefault(fragment);
+				FragmentViewModes.SearchViewMode().searchAsDefault(fragment);
 				viewModeAlert.innerHTML += '<strong>Default search</strong>';
 			} else if (viewMode === Constants.INLINE) {
-				ViewModes.searchAsInline(fragment);
+				FragmentViewModes.SearchViewMode().searchAsInline(fragment);
 				viewModeAlert.innerHTML += '<strong>Inline search</strong>';
 			}
-			main_content.insertBefore(viewModeAlert, main_content.firstChild);
+			mainContent.insertBefore(viewModeAlert, mainContent.firstChild);
 		},
 
-		composePlacesFragment: function (list, fragment, viewMode) {
+		composeResultsFragment: function (list, fragment, viewMode) {
 			if (viewMode === Constants.CARDS_LIST) {
-				ViewModes.placesAsCardList(list, fragment);
+				FragmentViewModes.ResultsViewMode().resultsAsCardList(list, fragment);
 			} else if (viewMode === Constants.TABLE) {
-				ViewModes.placesAsTable(list, fragment);
+				FragmentViewModes.ResultsViewMode().resultsAsTable(list, fragment);
 			}
 		}
 	};
