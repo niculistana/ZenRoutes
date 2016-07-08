@@ -1,9 +1,0 @@
-const GO_BUTTON_TEXT = 'GO';
-const SETTINGS_BUTTON_TEXT = 'SETTINGS';
-
-const ALERT_DEFAULT = 'DEFAULT';
-
-module.exports = {
-	GO_BUTTON_TEXT,
-	SETTINGS_BUTTON_TEXT
-};
