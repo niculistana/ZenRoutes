@@ -2,51 +2,46 @@
 var ApiConnection = require('./apiconnection');
 var Globals = require('./_variables/globals.js');
 var Constants = require('./_variables/constants');
-var FragmentComposer = require('./_composers/fragmentcomposer.js');
-
-if (document.readyState !== "loading") {
-	initData();
-} else {
-	document.addEventListener('DOMContentLoaded', function() {
-		initData();
-	}, false);
-}
+var DomEvents = require('./domevents');
+var FragmentController = require('./_controllers/fragmentcontroller.js');
+var Strings = require('./_variables/strings');
 
 ApiConnection.connect('https://maps.googleapis.com/maps/api/js?'+
 	'key=AIzaSyBgESRsFdB2XZSZtPhiVnKWzG0JeR-nGGM&callback=initGoogleMapApi&'+
 	'libraries=places', 'initGoogleMapApi', initComponents);
 
-function initData() {
-	console.log('initData');
-};
-
 function initComponents() {
-	var search = document.getElementById('search');
+	var searchContainer = document.getElementById('search');
 	var searchFragment = document.createDocumentFragment();
 
-	search.innerHTML = '';
-	FragmentComposer.composeSearchFragment(searchFragment, Constants.DEFAULT);
-	search.appendChild(searchFragment);
+	searchContainer.innerHTML = '';
+	FragmentController.composeSearchFragment(searchFragment, Constants.DEFAULT);
+	searchContainer.appendChild(searchFragment);
 
 	var searchInput = document.getElementById('search-input');
 	var autocomplete = new google.maps.places.Autocomplete(searchInput, {
-		types: ['address']
+		types: ['(cities)']
 	});
 
+
+	google.maps.event.addListener(autocomplete, 'place_changed', function () {
+		var result = autocomplete.getPlace();
+		if (result.geometry) {
+			DomEvents.SearchEvents.searchForPlaces();
+
+		} else {
+			document.getElementById('search-input').placeholder = Strings.SEARCH_PLACEHOLDER_TEXT;
+		}
+	});
 
 	var styles = [{"featureType":"poi","elementType":"geometry","stylers":[{"color":"#E8DED1"}]},
 		{"featureType":"landscape","elementType":"geometry","stylers":[{"color":"#E8D7D1"}]},
 		{"featureType":"road.highway","elementType":"geometry","stylers":[{"lightness":60},{"color":"#BCB4B5"}]},
 		{"featureType":"water","stylers":[{"color":"#4397CE"}]}]
 
-
-	// Create a new StyledMapType object, passing it the array of styles,
-	// as well as the name to be displayed on the map type control.
 	var styledMap = new google.maps.StyledMapType(styles,
 	{name: "Styled Map"});
 
-	// Create a map object, and include the MapTypeId to add
-	// to the map type control.
 	var mapOptions = {
 		zoom: 12,
 		center: new google.maps.LatLng(37.7843179, -122.3951441),
@@ -54,20 +49,14 @@ function initComponents() {
 			mapTypeIds: [google.maps.MapTypeId.ROADMAP, 'map_style']
 		},
 		minZoom: 7,
-		maxZoom: 17
+		maxZoom: 17,
+		mapTypeControl: false,
+		scaleControl: false,
+		streetViewControl: false
 	};
 
 	window.map = new google.maps.Map(document.getElementById('map'), mapOptions);
 
-	//Associate the styled map with the MapTypeId and set it to display.
 	map.mapTypes.set('map_style', styledMap);
 	map.setMapTypeId('map_style');
-
-
-	// MapLoader.loadMap('map', -33.8688, 151.2195);
-
-	// geocoder.geocode({'address': query}), function(results, status) {
-	// 	console.log(results);
-	// 	console.log(status);
-	// }
 };

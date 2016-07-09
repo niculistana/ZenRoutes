@@ -1,15 +1,127 @@
 @import url(../assets/fonts/times_sans_serif.ttf);
 @import url(https://fonts.googleapis.com/css?family=Heebo:300,400,600);
-.content {
+.header #header_components {
   left: 50%;
   transform: translateX(-50%); }
 
-#map {
-  height: 500px; }
+.delayOverlay {
+  z-index: 20; }
+
+.delayOverlay {
+  background: rgba(255, 255, 255, 0.5); }
+
+h1, p, li {
+  font-family: "Heebo", sans-serif; }
+
+h1 {
+  font-weight: 600; }
+
+p, li {
+  font-weight: 300; }
+
+a {
+  text-decoration: none; }
+
+a:hover {
+  text-decoration: underline; }
+
+body {
+  width: 100%; }
 
 .content {
+  position: relative;
+  top: 50px; }
+
+#map {
+  height: 560px; }
+
+#results {
+  height: 560px;
+  overflow: scroll;
+  background-color: #ccc; }
+
+#search-input {
+  font-family: "Heebo", sans-serif;
+  font-size: 20px;
+  text-align: center;
+  border: 0;
+  box-shadow: unset; }
+
+.input-group .input-group-addon {
+  background-color: #fffff;
+  border: 0; }
+
+.header {
   position: absolute;
-  width: 80%;
-  height: auto; }
+  width: 100%;
+  height: 50px;
+  background-color: #51484A; }
+  .header #header_components {
+    width: 90%;
+    height: 50px;
+    background-color: #51484A;
+    position: absolute; }
+    .header #header_components .logo {
+      font-family: "Times Sans Serif", sans-serif;
+      font-size: 34px;
+      color: #FFF;
+      position: relative;
+      top: 50%;
+      padding-left: 10px;
+      transform: translateY(-50%); }
+      .header #header_components .logo a {
+        text-decoration: none;
+        color: #FFF; }
+      .header #header_components .logo a:hover {
+        background-color: transparent; }
+
+.pac-container {
+  box-shadow: unset; }
+  .pac-container .pac-item {
+    text-align: center;
+    font-family: "Heebo", sans-serif;
+    font-size: 20px;
+    text-align: center;
+    border: 0;
+    padding: 15px; }
+    .pac-container .pac-item .pac-item-query {
+      font-family: "Heebo", sans-serif;
+      font-size: 20px;
+      text-align: center;
+      border: 0;
+      padding: 2px; }
+    .pac-container .pac-item .pac-icon {
+      display: none; }
+    .pac-container .pac-item span:nth-child(3) {
+      display: none; }
+
+.fullscreen {
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  padding: 0;
+  margin: 0;
+  top: 0;
+  left: 0; }
+
+.delayOverlay {
+  cursor: wait; }
+  .delayOverlay h1 {
+    font-family: "Times Sans Serif", sans-serif;
+    font-size: 30px;
+    color: #51484A;
+    position: relative;
+    top: 30%;
+    transform: translateY(-50%);
+    text-align: center; }
+
+.top-offset-sm {
+  margin-top: 2px; }
+
+.top-offset-m {
+  margin-top: 5px; }
+
+.top-offset-l {
+  margin-top: 10px; }
 
 /*# sourceMappingURL=main.css.map */

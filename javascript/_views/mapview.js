@@ -1,8 +1,7 @@
-var DomEvents = require('./../domevents');
 var Strings = require('./../_variables/strings');
 var Globals = require('./../_variables/globals');
 
-var MarkerViewMode = function() {
+var MarkerView = function() {
 	return {
 		markerAsAll: function() {
 			console.log('markerAsAll ' , resultList);
@@ -22,11 +21,11 @@ var MarkerViewMode = function() {
 	}
 };
 
-var InfoWindowViewMode = function(map, resultList) {
+var InfoWindowView = function(map, resultList) {
 };
 
 module.exports = {
-	MarkerViewMode,
-	InfoWindowViewMode
+	MarkerView,
+	InfoWindowView
 }
 

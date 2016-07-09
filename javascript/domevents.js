@@ -1,8 +1,9 @@
 var CacheUtility = require('./cacheutility');
-var MapComposer = require('./_composers/mapcomposer');
-var MapViewModes = require('./_viewmodes/mapviewmodes');
+var MapController = require('./_controllers/mapcontroller');
+var MapView = require('./_views/mapview');
 var GeocodeService = require('./_apiservices/geocodeservice');
 var PlacesService = require('./_apiservices/placesservice');
+var Constants = require('./_variables/constants');
 
 SearchEvents = function() {
 	return {
@@ -20,12 +21,12 @@ SearchEvents = function() {
 			if (query.length > 0) {
 				CacheUtility.storeQuery(query);
 
-				MapViewModes.MarkerViewMode().clearAllMarkers();
+				MapView.MarkerView().clearAllMarkers();
 
 				GeocodeService.getGeocodeFromQuery(query, function(result){
 					var originLocation = result.geometry.location;
 					CacheUtility.storeGeocodeResult(query,result);
-					MapComposer.composeOriginMarker(originLocation);
+					MapController.composeOriginMarker(originLocation);
 
 					// construct request over here
 					var request = {
@@ -35,17 +36,35 @@ SearchEvents = function() {
 					};
 
 					PlacesService.getPlacesFromRequest(request, function(results) {
+						var body = document.getElementsByTagName("body")[0];
+						var fullScreenFragment = document.createDocumentFragment();
+						var resultsContainer = document.getElementById('results');
+
+						FragmentController.composeFullScreenFragment(fullScreenFragment, Constants.DELAY);
+						body.insertBefore(fullScreenFragment, body.firstChild);
+
+						resultsContainer.innerHTML = '';
+
 						results.forEach(function(result, index){
 							(function(index){
 								setTimeout(function(){
 									var placeId = result.place_id;
+
 									PlacesService.getPlaceDetailsFromPlaceId(placeId, function(result) {
-										MapComposer.composeResultMarker(result);
+										MapController.composeResultMarker(result);
+										var resultFragment = document.createDocumentFragment();
+										FragmentController.composeResultFragment(resultFragment, result, Constants.DEFAULT);
+										resultsContainer.appendChild(resultFragment);
 										CacheUtility.storePlaceResult(placeId, result);
 									});
+
+									if (index == results.length-1) { // remove fullScreenFragment
+										body.removeChild(body.firstChild);
+									}
+
 								}, index*600);
 							})(index);
-						}); 
+						});
 					});
 				});
 			}

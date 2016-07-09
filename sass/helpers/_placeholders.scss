@@ -2,3 +2,19 @@
 	left: 50%;
 	transform: translateX(-50%);
 }
+
+%push-forward {
+	z-index: 20;
+}
+
+%push-backward {
+	z-index: -20;
+}
+
+%blur {
+	background: transparentize(white, 0.5);
+}
+
+%dim {
+	background: transparentize(black, 0.5);
+}

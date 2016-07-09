@@ -11,18 +11,28 @@
 	<body>
 		<!-- <div class="var_dump" style="position: fixed; top: 50px;"><button id="test_btn" onclick="pushLeft()">Push left</button></div> -->
 		<div class="header">
-			<div id="main-header">
-				<div class="logo"><a href="/">ZenTravels</a></div><div id="header-search"></div>
+			<div id="header_components">
+				<div class="logo"><a href="/">ZenTravels</a></div></div>
 			</div>
 		</div>
-		<div id="side-menu"></div>
 		<div class="content" id="main-content">
-			<div id="search">
-			</div>
-			<div class="results">
-				<div id="map">
+			<div class="container-fluid">
+				<div class="row top-offset-l">
+					<div class="col-sm-12">
+						<div id="search">
+						</div>
+					</div>
 				</div>
-				<div id="places">
+				<div class="row top-offset-l">
+					<div class="col-sm-9">
+						<div id="map">
+						</div>
+					</div>
+					<div class="col-sm-3">
+						<!-- panel here -->
+						<div id="results">
+						</div>
+					</div>
 				</div>
 			</div>
 		</div>

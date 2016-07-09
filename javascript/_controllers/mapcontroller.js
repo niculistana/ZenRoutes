@@ -1,7 +1,7 @@
 var Constants = require('./../_variables/constants');
 var Globals = require('./../_variables/globals');
 
-MapComposer = function() {
+MapController = function() {
 	var mainContent = document.getElementById('main-content');
 
 	return {
@@ -35,4 +35,4 @@ MapComposer = function() {
 	};
 }();
 
-module.exports = MapComposer;
+module.exports = MapController;

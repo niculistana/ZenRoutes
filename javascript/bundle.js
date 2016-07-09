@@ -50,43 +50,42 @@ PlacesService = function() {
 module.exports = PlacesService;
 },{}],3:[function(require,module,exports){
 var Constants = require('./../_variables/constants');
-var FragmentViewModes = require('./../_viewmodes/fragmentviewmodes');
+var FragmentView = require('./../_views/fragmentview');
 
-FragmentComposer = function() {
+FragmentController = function() {
 	var mainContent = document.getElementById('main-content');
-	return {
-		composeSearchFragment: function(fragment, viewMode) {
-			var viewModeAlert = document.createElement('div');
-			viewModeAlert.setAttribute('class', 'alert alert-success fade in');
-			viewModeAlert.innerHTML = '<a href="#" class="close" data-dismiss="alert"' + 
-				'aria-label="close">&times;</a>';
 
-			if (viewMode === Constants.DEFAULT) {
-				FragmentViewModes.SearchViewMode().searchAsDefault(fragment);
-				viewModeAlert.innerHTML += '<strong>Default search</strong>';
-			} else if (viewMode === Constants.INLINE) {
-				FragmentViewModes.SearchViewMode().searchAsInline(fragment);
-				viewModeAlert.innerHTML += '<strong>Inline search</strong>';
+	return {
+		composeSearchFragment: function(fragment, view) {
+			if (view === Constants.DEFAULT) {
+				FragmentView.SearchView().searchAsDefault(fragment);
+			} else if (view === Constants.INLINE) {
+				FragmentView.SearchView().searchAsInline(fragment);
 			}
-			mainContent.insertBefore(viewModeAlert, mainContent.firstChild);
 		},
 
-		composeResultsFragment: function (list, fragment, viewMode) {
-			if (viewMode === Constants.CARDS_LIST) {
-				FragmentViewModes.ResultsViewMode().resultsAsCardList(list, fragment);
-			} else if (viewMode === Constants.TABLE) {
-				FragmentViewModes.ResultsViewMode().resultsAsTable(list, fragment);
+		composeResultFragment: function (fragment, result, view) {
+			if (view === Constants.DEFAULT) {
+				FragmentView.ResultView().resultsAsCard(fragment, result);
+			}
+		},
+
+		composeFullScreenFragment: function (fragment, view) {
+			if (view === Constants.DELAY) {
+				FragmentView.FullScreenView().fullScreenAsDelay(fragment);
+			} else if (view === Constants.DIM) {
+				FragmentView.FullScreenView().fullScreenAsDim(fragment);
 			}
 		}
 	};
 }();
 
-module.exports = FragmentComposer;
-},{"./../_variables/constants":5,"./../_viewmodes/fragmentviewmodes":8}],4:[function(require,module,exports){
+module.exports = FragmentController;
+},{"./../_variables/constants":5,"./../_views/fragmentview":8}],4:[function(require,module,exports){
 var Constants = require('./../_variables/constants');
 var Globals = require('./../_variables/globals');
 
-MapComposer = function() {
+MapController = function() {
 	var mainContent = document.getElementById('main-content');
 
 	return {
@@ -120,13 +119,15 @@ MapComposer = function() {
 	};
 }();
 
-module.exports = MapComposer;
+module.exports = MapController;
 },{"./../_variables/constants":5,"./../_variables/globals":6}],5:[function(require,module,exports){
 const INLINE = 'inline';
 const DEFAULT = 'default';
 
-const CARDS_LIST = 'cards list';
 const TABLE = 'table';
+
+const DELAY = 'delay';
+const DIM = 'dim';
 
 const QUERY_CACHE_KEY = 'queryCache';
 const GEOCODE_CACHE_KEY = 'geocodeCache';
@@ -135,8 +136,9 @@ const PLACE_CACHE_KEY = 'placeCache';
 module.exports = {
 	INLINE,
 	DEFAULT,
-	CARDS_LIST,
 	TABLE,
+	DELAY,
+	DIM,
 	QUERY_CACHE_KEY,
 	GEOCODE_CACHE_KEY,
 	PLACE_CACHE_KEY
@@ -160,12 +162,17 @@ Globals = function () {
 
 module.exports = Globals;
 },{"./constants":5}],7:[function(require,module,exports){
+const SEARCH_PLACEHOLDER_TEXT = 'Which city are you visiting?'
+
+const LOADING_RESULTS = 'Hang on for a sec while we gather places to go to...';
+
 const GO_BUTTON_TEXT = 'GO';
 const SETTINGS_BUTTON_TEXT = 'SETTINGS';
 
-const ALERT_DEFAULT = 'DEFAULT';
 
 module.exports = {
+	SEARCH_PLACEHOLDER_TEXT,
+	LOADING_RESULTS,
 	GO_BUTTON_TEXT,
 	SETTINGS_BUTTON_TEXT
 };
@@ -173,33 +180,30 @@ module.exports = {
 var DomEvents = require('./../domevents');
 var Strings = require('./../_variables/strings');
 
-var SearchViewMode = function(){
+var SearchView = function(){
 	var goButtonText = Strings.GO_BUTTON_TEXT;
 	var settingsButtonText = Strings.SETTINGS_BUTTON_TEXT;
 
 	return {
 		searchAsDefault: function(fragment) {
+			var input_group = document.createElement('div');
+			var input_group_addon = document.createElement('span');
+			var glyphicon = document.createElement('i');
 			var search_input = document.createElement('input');
-			var search_button = document.createElement('button');
-			var search_history = document.createElement('div');
 
+			input_group.setAttribute('class', 'input-group input-group-lg');
+			input_group_addon.setAttribute('class', 'input-group-addon');
+			glyphicon.setAttribute('class', 'glyphicon glyphicon-search');
+			search_input.setAttribute('type', 'text');
+			search_input.setAttribute('class', 'form-control');
 			search_input.setAttribute('id', 'search-input');
-			search_input.addEventListener('keyup', function(event) {
-				DomEvents.SearchEvents.onSearchSubmit(event);
-			});
-			search_button.setAttribute('id', 'search-button');
-			search_button.innerHTML = goButtonText;
-			search_button.addEventListener('click', function() {
-				DomEvents.SearchEvents.searchForPlaces();
-			});
+			search_input.setAttribute('placeholder', Strings.SEARCH_PLACEHOLDER_TEXT);
 
-			search_history.innerHTML = 
-				localStorage.getItem('queryCache') ? 'Recent searches: ' 
-				+ JSON.parse(localStorage.getItem('queryCache')).slice(0, 5).join(' | ') : '<br />';
+			input_group.appendChild(input_group_addon);
+			input_group_addon.appendChild(glyphicon);
+			input_group.appendChild(search_input);
 
-			fragment.appendChild(search_input);
-			fragment.appendChild(search_button);
-			fragment.appendChild(search_history);
+			fragment.appendChild(input_group);
 		},
 
 		searchAsInline: function(fragment) {
@@ -228,31 +232,28 @@ var SearchViewMode = function(){
 	}
 };
 
-var ResultsViewMode = function(resultList) {
+var ResultView = function() {
 	return {
-		resultsAsCardList: function(fragment) {
+		resultsAsCard: function(fragment, result) {
 			var place_card = document.createElement('div');
 			var place_info = document.createElement('div');
+			var place_name = document.createElement('h1');
+			var miles_away = document.createElement('p');
+			var save_button = document.createElement('button');
 
-			fragment.appendChild(place_card);
+			place_name.innerHTML = result.name;
+			miles_away.innerHTML = result.formatted_address;
+			save_button.innerHTML = 'Save';
+
+			place_info.appendChild(place_name); 
+			place_info.appendChild(miles_away); 
+			place_info.appendChild(save_button); 
 			place_card.appendChild(place_info);
 
-			resultList.forEach(function(e) {
-				var place_name = document.createElement('h1');
-				var miles_away = document.createElement('p');
-				var save_button = document.createElement('button');
-
-				place_name.innerHTML = e.name;
-				miles_away.innerHTML = e.formatted_address;
-				save_button.innerHTML = 'Save';
-
-				place_info.appendChild(place_name); 
-				place_info.appendChild(miles_away); 
-				place_info.appendChild(save_button); 
-			});
+			fragment.appendChild(place_card);
 		},
 
-		resultsAsTable: function(fragment) {
+		resultsAsTableItem: function(fragment) {
 			var table = document.createElement('table');
 			table.setAttribute('class', 'table table-hover table-responsive');
 			
@@ -266,13 +267,13 @@ var ResultsViewMode = function(resultList) {
 			thead.appendChild(tr_head);
 			table.appendChild(tbody);
 
-			for (var key in resultList[0]) {
+			for (var key in result[0]) {
 				var th = document.createElement('th');
 				th.innerHTML += key;
 				tr_head.appendChild(th);
 			}
 
-			resultList.forEach(function(e) {
+			result.forEach(function(e) {
 				var tr_body = document.createElement('tr');
 				for (var key in e) {
 					if (e.hasOwnProperty(key)) {
@@ -285,16 +286,32 @@ var ResultsViewMode = function(resultList) {
 	}
 };
 
+var FullScreenView = function() {
+	var loadingMessage = Strings.LOADING_RESULTS;
+	return {
+		fullScreenAsDelay: function(fragment, result) {
+			var delayOverlay = document.createElement('div');
+			var delayOverlayMessage = document.createElement('h1');
+
+			delayOverlay.setAttribute('class', 'fullscreen delayOverlay');
+			delayOverlayMessage.innerHTML = loadingMessage;
+
+			delayOverlay.appendChild(delayOverlayMessage);
+			fragment.appendChild(delayOverlay);
+		}
+	}
+};
+
 module.exports = {
-	SearchViewMode,
-	ResultsViewMode
+	SearchView,
+	ResultView,
+	FullScreenView
 }
 },{"./../_variables/strings":7,"./../domevents":12}],9:[function(require,module,exports){
-var DomEvents = require('./../domevents');
 var Strings = require('./../_variables/strings');
 var Globals = require('./../_variables/globals');
 
-var MarkerViewMode = function() {
+var MarkerView = function() {
 	return {
 		markerAsAll: function() {
 			console.log('markerAsAll ' , resultList);
@@ -314,16 +331,16 @@ var MarkerViewMode = function() {
 	}
 };
 
-var InfoWindowViewMode = function(map, resultList) {
+var InfoWindowView = function(map, resultList) {
 };
 
 module.exports = {
-	MarkerViewMode,
-	InfoWindowViewMode
+	MarkerView,
+	InfoWindowView
 }
 
 
-},{"./../_variables/globals":6,"./../_variables/strings":7,"./../domevents":12}],10:[function(require,module,exports){
+},{"./../_variables/globals":6,"./../_variables/strings":7}],10:[function(require,module,exports){
 ApiConnection = function() {
 	return {
 		connect: function(url, callbackName, globalFunction) {
@@ -377,10 +394,11 @@ CacheUtility = function() {
 module.exports = CacheUtility;
 },{"./_variables/constants":5,"./_variables/globals":6}],12:[function(require,module,exports){
 var CacheUtility = require('./cacheutility');
-var MapComposer = require('./_composers/mapcomposer');
-var MapViewModes = require('./_viewmodes/mapviewmodes');
+var MapController = require('./_controllers/mapcontroller');
+var MapView = require('./_views/mapview');
 var GeocodeService = require('./_apiservices/geocodeservice');
 var PlacesService = require('./_apiservices/placesservice');
+var Constants = require('./_variables/constants');
 
 SearchEvents = function() {
 	return {
@@ -398,12 +416,12 @@ SearchEvents = function() {
 			if (query.length > 0) {
 				CacheUtility.storeQuery(query);
 
-				MapViewModes.MarkerViewMode().clearAllMarkers();
+				MapView.MarkerView().clearAllMarkers();
 
 				GeocodeService.getGeocodeFromQuery(query, function(result){
 					var originLocation = result.geometry.location;
 					CacheUtility.storeGeocodeResult(query,result);
-					MapComposer.composeOriginMarker(originLocation);
+					MapController.composeOriginMarker(originLocation);
 
 					// construct request over here
 					var request = {
@@ -413,17 +431,35 @@ SearchEvents = function() {
 					};
 
 					PlacesService.getPlacesFromRequest(request, function(results) {
+						var body = document.getElementsByTagName("body")[0];
+						var fullScreenFragment = document.createDocumentFragment();
+						var resultsContainer = document.getElementById('results');
+
+						FragmentController.composeFullScreenFragment(fullScreenFragment, Constants.DELAY);
+						body.insertBefore(fullScreenFragment, body.firstChild);
+
+						resultsContainer.innerHTML = '';
+
 						results.forEach(function(result, index){
 							(function(index){
 								setTimeout(function(){
 									var placeId = result.place_id;
+
 									PlacesService.getPlaceDetailsFromPlaceId(placeId, function(result) {
-										MapComposer.composeResultMarker(result);
+										MapController.composeResultMarker(result);
+										var resultFragment = document.createDocumentFragment();
+										FragmentController.composeResultFragment(resultFragment, result, Constants.DEFAULT);
+										resultsContainer.appendChild(resultFragment);
 										CacheUtility.storePlaceResult(placeId, result);
 									});
+
+									if (index == results.length-1) { // remove fullScreenFragment
+										body.removeChild(body.firstChild);
+									}
+
 								}, index*600);
 							})(index);
-						}); 
+						});
 					});
 				});
 			}
@@ -434,56 +470,51 @@ SearchEvents = function() {
 module.exports = {
 	SearchEvents
 };
-},{"./_apiservices/geocodeservice":1,"./_apiservices/placesservice":2,"./_composers/mapcomposer":4,"./_viewmodes/mapviewmodes":9,"./cacheutility":11}],13:[function(require,module,exports){
+},{"./_apiservices/geocodeservice":1,"./_apiservices/placesservice":2,"./_controllers/mapcontroller":4,"./_variables/constants":5,"./_views/mapview":9,"./cacheutility":11}],13:[function(require,module,exports){
 'use strict';
 var ApiConnection = require('./apiconnection');
 var Globals = require('./_variables/globals.js');
 var Constants = require('./_variables/constants');
-var FragmentComposer = require('./_composers/fragmentcomposer.js');
-
-if (document.readyState !== "loading") {
-	initData();
-} else {
-	document.addEventListener('DOMContentLoaded', function() {
-		initData();
-	}, false);
-}
+var DomEvents = require('./domevents');
+var FragmentController = require('./_controllers/fragmentcontroller.js');
+var Strings = require('./_variables/strings');
 
 ApiConnection.connect('https://maps.googleapis.com/maps/api/js?'+
 	'key=AIzaSyBgESRsFdB2XZSZtPhiVnKWzG0JeR-nGGM&callback=initGoogleMapApi&'+
 	'libraries=places', 'initGoogleMapApi', initComponents);
 
-function initData() {
-	console.log('initData');
-};
-
 function initComponents() {
-	var search = document.getElementById('search');
+	var searchContainer = document.getElementById('search');
 	var searchFragment = document.createDocumentFragment();
 
-	search.innerHTML = '';
-	FragmentComposer.composeSearchFragment(searchFragment, Constants.DEFAULT);
-	search.appendChild(searchFragment);
+	searchContainer.innerHTML = '';
+	FragmentController.composeSearchFragment(searchFragment, Constants.DEFAULT);
+	searchContainer.appendChild(searchFragment);
 
 	var searchInput = document.getElementById('search-input');
 	var autocomplete = new google.maps.places.Autocomplete(searchInput, {
-		types: ['address']
+		types: ['(cities)']
 	});
 
+
+	google.maps.event.addListener(autocomplete, 'place_changed', function () {
+		var result = autocomplete.getPlace();
+		if (result.geometry) {
+			DomEvents.SearchEvents.searchForPlaces();
+
+		} else {
+			document.getElementById('search-input').placeholder = Strings.SEARCH_PLACEHOLDER_TEXT;
+		}
+	});
 
 	var styles = [{"featureType":"poi","elementType":"geometry","stylers":[{"color":"#E8DED1"}]},
 		{"featureType":"landscape","elementType":"geometry","stylers":[{"color":"#E8D7D1"}]},
 		{"featureType":"road.highway","elementType":"geometry","stylers":[{"lightness":60},{"color":"#BCB4B5"}]},
 		{"featureType":"water","stylers":[{"color":"#4397CE"}]}]
 
-
-	// Create a new StyledMapType object, passing it the array of styles,
-	// as well as the name to be displayed on the map type control.
 	var styledMap = new google.maps.StyledMapType(styles,
 	{name: "Styled Map"});
 
-	// Create a map object, and include the MapTypeId to add
-	// to the map type control.
 	var mapOptions = {
 		zoom: 12,
 		center: new google.maps.LatLng(37.7843179, -122.3951441),
@@ -491,21 +522,15 @@ function initComponents() {
 			mapTypeIds: [google.maps.MapTypeId.ROADMAP, 'map_style']
 		},
 		minZoom: 7,
-		maxZoom: 17
+		maxZoom: 17,
+		mapTypeControl: false,
+		scaleControl: false,
+		streetViewControl: false
 	};
 
 	window.map = new google.maps.Map(document.getElementById('map'), mapOptions);
 
-	//Associate the styled map with the MapTypeId and set it to display.
 	map.mapTypes.set('map_style', styledMap);
 	map.setMapTypeId('map_style');
-
-
-	// MapLoader.loadMap('map', -33.8688, 151.2195);
-
-	// geocoder.geocode({'address': query}), function(results, status) {
-	// 	console.log(results);
-	// 	console.log(status);
-	// }
 };
-},{"./_composers/fragmentcomposer.js":3,"./_variables/constants":5,"./_variables/globals.js":6,"./apiconnection":10}]},{},[13]);
+},{"./_controllers/fragmentcontroller.js":3,"./_variables/constants":5,"./_variables/globals.js":6,"./_variables/strings":7,"./apiconnection":10,"./domevents":12}]},{},[13]);

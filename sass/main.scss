@@ -4,13 +4,143 @@
 @import "helpers/_placeholders.scss";
 @import "helpers/_mixins.scss";
 
-#map {
-	height:500px;
+h1, p, li {
+	font-family: $secondary-font;
+}
+
+h1 {
+	font-weight: 600;
+}
+
+p, li {
+	font-weight: 300;
+}
+
+a {
+	text-decoration: none;
+}
+
+a:hover {
+	text-decoration: underline;
+}
+
+body {
+	width: 100%;
 }
 
 .content {
-	@extend %center_horizontally;
-	position: absolute;
-	width: 80%;
-	height: auto;
+	position:relative;
+	top: 50px;
 }
+
+#map {
+	height: 560px;
+}
+
+#results{
+	height: 560px;
+	overflow: scroll;
+	background-color: #ccc;
+}
+
+#search-input {
+	font-family: $secondary-font;
+	font-size: 20px;
+	text-align: center;
+	border: 0;
+	box-shadow: unset;
+}
+
+.input-group {
+	.input-group-addon {
+		background-color: #fffff;
+		border:0;
+	}
+}
+
+.header {
+	position: absolute;
+	@include dimensions(100%,50px);
+	background-color: $oak-brown;
+
+	#header_components {
+		@extend %center_horizontally;
+		@include dimensions(90%,50px);
+		background-color: $oak-brown;
+		position: absolute;
+
+		.logo {
+			font-family: $primary-font;
+			font-size: 34px;
+			color: #FFF;
+			position: relative;
+			top: 50%;
+			padding-left: 10px;
+			transform: translateY(-50%);
+
+			a {
+				text-decoration: none;
+				color: #FFF;
+			}
+
+			a:hover {
+				background-color: transparent;
+			}
+		}
+	}
+}
+
+.pac-container {
+	box-shadow: unset;
+	.pac-item{
+		text-align: center;
+		font-family: $secondary-font;
+		font-size: 20px;
+		text-align: center;
+		border: 0;
+		padding:15px;
+		.pac-item-query{
+			font-family: $secondary-font;
+			font-size: 20px;
+			text-align: center;
+			border: 0;
+			padding: 2px;
+		}
+		.pac-icon{
+			display: none;
+		}
+		span:nth-child(3) {
+			display: none;
+		}
+	}
+}
+
+.fullscreen {
+	@include dimensions(100%,100%);
+	position: absolute;
+	padding: 0;
+	margin: 0;
+	top: 0;
+	left: 0;
+}
+
+.delayOverlay {
+	@extend %push-forward;
+	@extend %blur;
+	cursor: wait;
+
+	h1 {
+		font-family: $primary-font;
+		font-size: 30px;
+		color: $oak-brown;
+		position: relative;
+		top: 30%;
+		transform: translateY(-50%);
+		text-align: center;
+	}
+}
+
+
+.top-offset-sm { margin-top: 2px; }
+.top-offset-m { margin-top: 5px; }
+.top-offset-l { margin-top: 10px; }
