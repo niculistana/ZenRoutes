@@ -19,19 +19,9 @@ GeocodeService = function() {
 }();
 
 module.exports = GeocodeService;
-},{"./../_variables/globals":6,"./../cacheutility":11}],2:[function(require,module,exports){
-PlacesService = function() {
+},{"./../_variables/globals":12,"./../cacheutility":17}],2:[function(require,module,exports){
+PlaceDetailsService = function() {
 	return {
-		getPlacesFromRequest: function(request, callback) {
-			var service = new google.maps.places.PlacesService(map);
-			service.nearbySearch(request, function (results, status) {
-				if (status === google.maps.places.PlacesServiceStatus.OK) {
-					callback(results);
-				} else {
-					console.log('nearbySearch was not successful due to the following: ' + status);
-				}
-			});
-		},
 		getPlaceDetailsFromPlaceId: function(placeId, callback) {
 			var service = new google.maps.places.PlacesService(map);
 			service.getDetails({
@@ -47,8 +37,65 @@ PlacesService = function() {
 	}
 }();
 
-module.exports = PlacesService;
+module.exports = PlaceDetailsService;
 },{}],3:[function(require,module,exports){
+PlacesService = function() {
+	return {
+		getPlacesFromCoordinates: function(coordinates, callback) {
+			var [x, y] = coordinates.split(',').map(parseFloat);
+			var origin = {lat: x, lng: y};
+			
+			var request = {
+				location: origin,
+				radius: 12000,
+				keyword: 'tourist attraction'
+			};
+
+			var service = new google.maps.places.PlacesService(map);
+			service.nearbySearch(request, function (results, status) {
+				if (status === google.maps.places.PlacesServiceStatus.OK) {
+					callback(results);
+				} else {
+					console.log('nearbySearch was not successful due to the following: ' + status);
+				}
+			});
+		}
+	}
+}();
+
+module.exports = PlacesService;
+},{}],4:[function(require,module,exports){
+var ZenPlace = function(id){
+	this.id = id;
+	this.geometry = {};
+	this.name = '';
+	this.types = [];
+	this.formatted_address = '';
+	this.formatted_phone_number = '';
+	this.website = '';
+	this.photos = [];
+	this.zen_level = -1;
+	this.options = {
+		saved: false,
+		promoted: false,
+		last_accessed: Date.now()
+	}
+};
+
+if (typeof(Number.prototype.toRad) === 'undefined') {
+	Number.prototype.toRad = function() {
+		return this * Math.PI / 180;
+	}
+};
+
+ZenPlace.prototype = {
+	setZenLevel: function(overall_rating, geotag_count) {
+		this.zen_level = overall_rating+geotag_count;
+	}
+};
+
+module.exports = ZenPlace;
+},{}],5:[function(require,module,exports){
 var Constants = require('./../_variables/constants');
 var FragmentView = require('./../_views/fragmentview');
 
@@ -81,7 +128,30 @@ FragmentController = function() {
 }();
 
 module.exports = FragmentController;
-},{"./../_variables/constants":5,"./../_views/fragmentview":8}],4:[function(require,module,exports){
+},{"./../_variables/constants":11,"./../_views/fragmentview":14}],6:[function(require,module,exports){
+var Globals = require('../_variables/globals');
+var CacheUtility = require('../cacheutility');
+var GeocodeService = require('../_apiservices/geocodeservice');
+
+GeocodeController = function() {
+	return{
+		getGeocodeResult: function(query, callback) {
+			if (Globals.geocodeCache[query]) {
+				var coordinates = Globals.geocodeCache[query];
+				callback(coordinates);
+			} else {
+				GeocodeService.getGeocodeFromQuery(query, function(result){
+					var coordinates = [result.geometry.location.lat(), result.geometry.location.lng()].toString();
+					CacheUtility.storeGeocodeResult(query,coordinates);
+					callback(coordinates);
+				});
+			}
+		}
+	}
+}();
+
+module.exports = GeocodeController;
+},{"../_apiservices/geocodeservice":1,"../_variables/globals":12,"../cacheutility":17}],7:[function(require,module,exports){
 var Constants = require('./../_variables/constants');
 var Globals = require('./../_variables/globals');
 
@@ -112,7 +182,7 @@ MapController = function() {
 				map: window.map,
 				position: result.geometry.location,
 				animation: google.maps.Animation.DROP,
-				icon: (result.photos) ? result.photos[0].getUrl({'maxWidth': 35, 'maxHeight': 35}) : defaultIcon
+				icon: (result.photos && result.photos[0].getUrl) ? result.photos[0].getUrl({'maxWidth': 35, 'maxHeight': 35}) : defaultIcon
 			});	
 			Globals.markers.push(marker);
 		}
@@ -120,7 +190,81 @@ MapController = function() {
 }();
 
 module.exports = MapController;
-},{"./../_variables/constants":5,"./../_variables/globals":6}],5:[function(require,module,exports){
+},{"./../_variables/constants":11,"./../_variables/globals":12}],8:[function(require,module,exports){
+var Globals = require('../_variables/globals');
+var CacheUtility = require('../cacheutility');
+var PlaceDetailsService = require('../_apiservices/placedetailsservice');
+
+PlaceDetailsController = function() {
+	return{
+		getPlaceDetailsResult: function(placeId, callback) {
+			if (Globals.placeDetailsCache[placeId]) {
+				var places = Globals.placeDetailsCache[placeId];
+				callback(places);
+			} else {
+				PlaceDetailsService.getPlaceDetailsFromPlaceId(placeId, function(result) {
+					var placeDetails = result;
+					CacheUtility.storePlaceDetailsResult(placeId,placeDetails);
+					callback(placeDetails);
+				});
+			}
+		}
+	}
+}();
+
+module.exports = PlaceDetailsController;
+},{"../_apiservices/placedetailsservice":2,"../_variables/globals":12,"../cacheutility":17}],9:[function(require,module,exports){
+var Globals = require('../_variables/globals');
+var CacheUtility = require('../cacheutility');
+var PlacesService = require('../_apiservices/placesservice');
+
+PlacesController = function() {
+	return{
+		getPlacesResult: function(coordinates, callback) {
+			if (Globals.placesCache[coordinates]) {
+				var places = Globals.placesCache[coordinates];
+				callback(places);
+			} else {
+				PlacesService.getPlacesFromCoordinates(coordinates, function(result) {
+					var places = result;
+					CacheUtility.storePlacesResult(coordinates,places);
+					callback(places);
+				});
+			}
+		}
+	}
+}();
+
+module.exports = PlacesController;
+},{"../_apiservices/placesservice":3,"../_variables/globals":12,"../cacheutility":17}],10:[function(require,module,exports){
+AppUtility = function(){
+	return {
+		generateZenPlaceId: function(){
+			var uniqueId = 'xxxxxxxxxxxxxxxxxxxxzpxxxxxxxxxx'.replace(/[x]/g, function(c) {
+				var r = Math.random()*16|0, v = c == 'x' ? r : (r&0x3|0x8);
+				return v.toString(16);
+			});
+
+			return uniqueId;
+		},
+		getDistanceBetween: function (firstLocation, secondLocation) {
+				var R = 3961;
+				var x1 = secondLocation.location.lat-firstLocation.location.lat;
+				var dLat = x1.toRad();  
+				var x2 = secondLocation.location.lng-firstLocation.location.lng;
+				var dlng = x2.toRad();  
+				var a = Math.sin(dLat/2) * Math.sin(dLat/2) + 
+						Math.cos(firstLocation.location.lat.toRad()) * Math.cos(secondLocation.location.lat.toRad()) * 
+						Math.sin(dlng/2) * Math.sin(dlng/2);  
+				var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)); 
+				var distanceBetween = R * c; 
+				return distanceBetween;
+		}
+	}
+}();
+
+module.exports = AppUtility;
+},{}],11:[function(require,module,exports){
 const INLINE = 'inline';
 const DEFAULT = 'default';
 
@@ -131,7 +275,9 @@ const DIM = 'dim';
 
 const QUERY_CACHE_KEY = 'queryCache';
 const GEOCODE_CACHE_KEY = 'geocodeCache';
-const PLACE_CACHE_KEY = 'placeCache';
+const PLACES_CACHE_KEY = 'placesCache';
+const PLACE_DETAILS_CACHE_KEY = 'placeDetailsCache';
+const ZEN_PLACE_CACHE_KEY = 'zenPlaceCache';
 
 module.exports = {
 	INLINE,
@@ -141,9 +287,11 @@ module.exports = {
 	DIM,
 	QUERY_CACHE_KEY,
 	GEOCODE_CACHE_KEY,
-	PLACE_CACHE_KEY
+	PLACES_CACHE_KEY,
+	PLACE_DETAILS_CACHE_KEY,
+	ZEN_PLACE_CACHE_KEY
 };
-},{}],6:[function(require,module,exports){
+},{}],12:[function(require,module,exports){
 var Constants = require('./constants');
 
 Globals = function () {
@@ -154,14 +302,16 @@ Globals = function () {
 		results: [],
 		resultsCart:[],
 		markers:[],
-		queryCache: (localStorage.getItem('queryCache')) ? JSON.parse(localStorage.getItem('queryCache')) : [],
-		geocodeCache: (localStorage.getItem('geocodeCache')) ? JSON.parse(localStorage.getItem('geocodeCache')) : {},
-		placeCache: (localStorage.getItem('placeCache')) ? JSON.parse(localStorage.getItem('placeCache')) : {}
+		queryCache: (localStorage.getItem(Constants.QUERY_CACHE_KEY)) ? JSON.parse(localStorage.getItem(Constants.QUERY_CACHE_KEY)) : [],
+		geocodeCache: (localStorage.getItem(Constants.GEOCODE_CACHE_KEY)) ? JSON.parse(localStorage.getItem(Constants.GEOCODE_CACHE_KEY)) : {},
+		placesCache: (localStorage.getItem(Constants.PLACES_CACHE_KEY)) ? JSON.parse(localStorage.getItem(Constants.PLACES_CACHE_KEY)) : {},
+		placeDetailsCache: (localStorage.getItem(Constants.PLACE_DETAILS_CACHE_KEY)) ? JSON.parse(localStorage.getItem(Constants.PLACE_DETAILS_CACHE_KEY)) : {},
+		zenPlaceCache: (localStorage.getItem(Constants.ZEN_PLACE_CACHE_KEY)) ? JSON.parse(localStorage.getItem(Constants.ZEN_PLACE_CACHE_KEY)) : {}
 	};
 }();
 
 module.exports = Globals;
-},{"./constants":5}],7:[function(require,module,exports){
+},{"./constants":11}],13:[function(require,module,exports){
 const SEARCH_PLACEHOLDER_TEXT = 'Which city are you visiting?'
 
 const LOADING_RESULTS = 'Hang on for a sec while we gather places to go to...';
@@ -176,7 +326,7 @@ module.exports = {
 	GO_BUTTON_TEXT,
 	SETTINGS_BUTTON_TEXT
 };
-},{}],8:[function(require,module,exports){
+},{}],14:[function(require,module,exports){
 var DomEvents = require('./../domevents');
 var Strings = require('./../_variables/strings');
 
@@ -307,7 +457,7 @@ module.exports = {
 	ResultView,
 	FullScreenView
 }
-},{"./../_variables/strings":7,"./../domevents":12}],9:[function(require,module,exports){
+},{"./../_variables/strings":13,"./../domevents":18}],15:[function(require,module,exports){
 var Strings = require('./../_variables/strings');
 var Globals = require('./../_variables/globals');
 
@@ -340,7 +490,7 @@ module.exports = {
 }
 
 
-},{"./../_variables/globals":6,"./../_variables/strings":7}],10:[function(require,module,exports){
+},{"./../_variables/globals":12,"./../_variables/strings":13}],16:[function(require,module,exports){
 ApiConnection = function() {
 	return {
 		connect: function(url, callbackName, globalFunction) {
@@ -357,14 +507,16 @@ ApiConnection = function() {
 }();
 
 module.exports = ApiConnection;
-},{}],11:[function(require,module,exports){
+},{}],17:[function(require,module,exports){
 var Globals = require('./_variables/globals');
 var Constants = require('./_variables/constants');
 
 CacheUtility = function() {
 	var queryCacheKey = Constants.QUERY_CACHE_KEY;
 	var geocodeCacheKey = Constants.GEOCODE_CACHE_KEY;
-	var placeCacheKey = Constants.PLACE_CACHE_KEY;
+	var placesCacheKey = Constants.PLACES_CACHE_KEY;
+	var placeDetailsCacheKey = Constants.PLACE_DETAILS_CACHE_KEY;
+	var zenPlaceCacheKey = Constants.ZEN_PLACE_CACHE_KEY;
 
 	return {
 		storeQuery: function(query) {
@@ -380,25 +532,43 @@ CacheUtility = function() {
 		},
 		clearGeocodeCache: function() {
 			localStorage[geocodeCacheKey] = '';
-		},	
-		storePlaceResult: function(placeId, result) {
-			Globals.placeCache[placeId] = result;
-			localStorage.setItem(placeCacheKey, JSON.stringify(Globals.placeCache));
 		},
-		clearPlaceCache: function() {
-			localStorage[placeCacheKey] = '';
+		storePlacesResult: function(coordinates, result) {
+			Globals.placesCache[coordinates] = result;
+			localStorage.setItem(placesCacheKey, JSON.stringify(Globals.placesCache));
+		},
+		clearPlacesCache: function() {
+			localStorage[placesCacheKey] = '';
+		},
+		storePlaceDetailsResult: function(placeId, result) {
+			Globals.placeDetailsCache[placeId] = result;
+			localStorage.setItem(placeDetailsCacheKey, JSON.stringify(Globals.placeDetailsCache));
+		},
+		clearPlaceDetailsCache: function() {
+			localStorage[placeDetailsCacheKey] = '';
+		},	
+		storeZenPlaceResult: function(zenPlaceId, result) {
+			Globals.zenPlaceCache[zenPlaceId] = result;
+			localStorage.setItem(zenPlaceCacheKey, JSON.stringify(Globals.zenPlaceCache));
+		},
+		clearZenPlaceCache: function() {
+			localStorage[zenPlaceCacheKey] = '';
 		}		
 	}
 }();
 
 module.exports = CacheUtility;
-},{"./_variables/constants":5,"./_variables/globals":6}],12:[function(require,module,exports){
+},{"./_variables/constants":11,"./_variables/globals":12}],18:[function(require,module,exports){
 var CacheUtility = require('./cacheutility');
 var MapController = require('./_controllers/mapcontroller');
 var MapView = require('./_views/mapview');
-var GeocodeService = require('./_apiservices/geocodeservice');
-var PlacesService = require('./_apiservices/placesservice');
 var Constants = require('./_variables/constants');
+var Globals = require('./_variables/globals');
+var ZenPlace = require('./_classes/zenplace');
+var AppUtility = require('./_utility/apputility');
+var GeocodeController = require('./_controllers/geocodecontroller');
+var PlacesController = require('./_controllers/placescontroller');
+var PlaceDetailsController = require('./_controllers/placedetailscontroller');
 
 SearchEvents = function() {
 	return {
@@ -418,19 +588,15 @@ SearchEvents = function() {
 
 				MapView.MarkerView().clearAllMarkers();
 
-				GeocodeService.getGeocodeFromQuery(query, function(result){
-					var originLocation = result.geometry.location;
-					CacheUtility.storeGeocodeResult(query,result);
-					MapController.composeOriginMarker(originLocation);
+				GeocodeController.getGeocodeResult(query, function(coordinates){
+					var [x, y] = coordinates.split(',').map(parseFloat);
 
-					// construct request over here
-					var request = {
-						location: originLocation,
-						radius: 12000,
-						keyword: 'tourist attraction'
-					};
+					var origin = {lat: x, lng: y};
 
-					PlacesService.getPlacesFromRequest(request, function(results) {
+					MapController.composeOriginMarker(origin);
+
+					PlacesController.getPlacesResult(coordinates, function(places){
+
 						var body = document.getElementsByTagName("body")[0];
 						var fullScreenFragment = document.createDocumentFragment();
 						var resultsContainer = document.getElementById('results');
@@ -440,21 +606,31 @@ SearchEvents = function() {
 
 						resultsContainer.innerHTML = '';
 
-						results.forEach(function(result, index){
+						places.forEach(function(result, index){
 							(function(index){
 								setTimeout(function(){
 									var placeId = result.place_id;
 
-									PlacesService.getPlaceDetailsFromPlaceId(placeId, function(result) {
-										MapController.composeResultMarker(result);
+									PlaceDetailsController.getPlaceDetailsResult(placeId, function(placeDetails){
+										MapController.composeResultMarker(placeDetails);
 										var resultFragment = document.createDocumentFragment();
-										FragmentController.composeResultFragment(resultFragment, result, Constants.DEFAULT);
+										FragmentController.composeResultFragment(resultFragment, placeDetails, Constants.DEFAULT);
 										resultsContainer.appendChild(resultFragment);
-										CacheUtility.storePlaceResult(placeId, result);
+
+										// var zenPlace = new ZenPlace(AppUtility.generateZenPlaceId());
+										// Object.keys(result).map(function(key, index) {
+										// 	if (typeof zenPlace[key] !== 'undefined' && key != 'id' && result.hasOwnProperty(key)) {
+										// 		zenPlace[key] = result[key];   
+										// 	}
+										// });
+
+										// CacheUtility.storeZenPlaceResult(zenPlace.id, result);
+
 									});
 
-									if (index == results.length-1) { // remove fullScreenFragment
+									if (index == places.length-1) { // remove fullScreenFragment
 										body.removeChild(body.firstChild);
+										body.style.backgroundPosition = "-500px";
 									}
 
 								}, index*600);
@@ -462,7 +638,50 @@ SearchEvents = function() {
 						});
 					});
 				});
-			}
+			}	
+
+			// 		PlacesService.getPlacesFromRequest(request, function(results) {
+			// 			var body = document.getElementsByTagName("body")[0];
+			// 			var fullScreenFragment = document.createDocumentFragment();
+			// 			var resultsContainer = document.getElementById('results');
+
+			// 			FragmentController.composeFullScreenFragment(fullScreenFragment, Constants.DELAY);
+			// 			body.insertBefore(fullScreenFragment, body.firstChild);
+
+			// 			resultsContainer.innerHTML = '';
+
+			// 			results.forEach(function(result, index){
+			// 				(function(index){
+			// 					setTimeout(function(){
+			// 						var placeId = result.place_id;
+
+			// 						PlacesService.getPlaceDetailsFromPlaceId(placeId, function(result) {
+			// 							MapController.composeResultMarker(result);
+			// 							var resultFragment = document.createDocumentFragment();
+			// 							FragmentController.composeResultFragment(resultFragment, result, Constants.DEFAULT);
+			// 							resultsContainer.appendChild(resultFragment);
+			// 							CacheUtility.storePlaceResult(placeId, result);
+
+			// 							var zenPlace = new ZenPlace(AppUtility.generateZenPlaceId());
+			// 							Object.keys(result).map(function(key, index) {
+			// 								if (typeof zenPlace[key] !== 'undefined' && key != 'id' && result.hasOwnProperty(key)) {
+			// 									zenPlace[key] = result[key];   
+			// 								}
+			// 							});
+
+			// 							CacheUtility.storeZenPlaceResult(zenPlace.id, result);
+			// 						});
+
+			// 						if (index == results.length-1) { // remove fullScreenFragment
+			// 							body.removeChild(body.firstChild);
+			// 						}
+
+			// 					}, index*600);
+			// 				})(index);
+			// 			});
+			// 		});
+			// 	});
+			// }
 		}
 	}
 }();
@@ -470,7 +689,7 @@ SearchEvents = function() {
 module.exports = {
 	SearchEvents
 };
-},{"./_apiservices/geocodeservice":1,"./_apiservices/placesservice":2,"./_controllers/mapcontroller":4,"./_variables/constants":5,"./_views/mapview":9,"./cacheutility":11}],13:[function(require,module,exports){
+},{"./_classes/zenplace":4,"./_controllers/geocodecontroller":6,"./_controllers/mapcontroller":7,"./_controllers/placedetailscontroller":8,"./_controllers/placescontroller":9,"./_utility/apputility":10,"./_variables/constants":11,"./_variables/globals":12,"./_views/mapview":15,"./cacheutility":17}],19:[function(require,module,exports){
 'use strict';
 var ApiConnection = require('./apiconnection');
 var Globals = require('./_variables/globals.js');
@@ -533,4 +752,4 @@ function initComponents() {
 	map.mapTypes.set('map_style', styledMap);
 	map.setMapTypeId('map_style');
 };
-},{"./_controllers/fragmentcontroller.js":3,"./_variables/constants":5,"./_variables/globals.js":6,"./_variables/strings":7,"./apiconnection":10,"./domevents":12}]},{},[13]);
+},{"./_controllers/fragmentcontroller.js":5,"./_variables/constants":11,"./_variables/globals.js":12,"./_variables/strings":13,"./apiconnection":16,"./domevents":18}]},{},[19]);

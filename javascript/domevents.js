@@ -1,9 +1,13 @@
 var CacheUtility = require('./cacheutility');
 var MapController = require('./_controllers/mapcontroller');
 var MapView = require('./_views/mapview');
-var GeocodeService = require('./_apiservices/geocodeservice');
-var PlacesService = require('./_apiservices/placesservice');
 var Constants = require('./_variables/constants');
+var Globals = require('./_variables/globals');
+var ZenPlace = require('./_classes/zenplace');
+var AppUtility = require('./_utility/apputility');
+var GeocodeController = require('./_controllers/geocodecontroller');
+var PlacesController = require('./_controllers/placescontroller');
+var PlaceDetailsController = require('./_controllers/placedetailscontroller');
 
 SearchEvents = function() {
 	return {
@@ -23,19 +27,15 @@ SearchEvents = function() {
 
 				MapView.MarkerView().clearAllMarkers();
 
-				GeocodeService.getGeocodeFromQuery(query, function(result){
-					var originLocation = result.geometry.location;
-					CacheUtility.storeGeocodeResult(query,result);
-					MapController.composeOriginMarker(originLocation);
+				GeocodeController.getGeocodeResult(query, function(coordinates){
+					var [x, y] = coordinates.split(',').map(parseFloat);
 
-					// construct request over here
-					var request = {
-						location: originLocation,
-						radius: 12000,
-						keyword: 'tourist attraction'
-					};
+					var origin = {lat: x, lng: y};
 
-					PlacesService.getPlacesFromRequest(request, function(results) {
+					MapController.composeOriginMarker(origin);
+
+					PlacesController.getPlacesResult(coordinates, function(places){
+
 						var body = document.getElementsByTagName("body")[0];
 						var fullScreenFragment = document.createDocumentFragment();
 						var resultsContainer = document.getElementById('results');
@@ -45,21 +45,31 @@ SearchEvents = function() {
 
 						resultsContainer.innerHTML = '';
 
-						results.forEach(function(result, index){
+						places.forEach(function(result, index){
 							(function(index){
 								setTimeout(function(){
 									var placeId = result.place_id;
 
-									PlacesService.getPlaceDetailsFromPlaceId(placeId, function(result) {
-										MapController.composeResultMarker(result);
+									PlaceDetailsController.getPlaceDetailsResult(placeId, function(placeDetails){
+										MapController.composeResultMarker(placeDetails);
 										var resultFragment = document.createDocumentFragment();
-										FragmentController.composeResultFragment(resultFragment, result, Constants.DEFAULT);
+										FragmentController.composeResultFragment(resultFragment, placeDetails, Constants.DEFAULT);
 										resultsContainer.appendChild(resultFragment);
-										CacheUtility.storePlaceResult(placeId, result);
+
+										// var zenPlace = new ZenPlace(AppUtility.generateZenPlaceId());
+										// Object.keys(result).map(function(key, index) {
+										// 	if (typeof zenPlace[key] !== 'undefined' && key != 'id' && result.hasOwnProperty(key)) {
+										// 		zenPlace[key] = result[key];   
+										// 	}
+										// });
+
+										// CacheUtility.storeZenPlaceResult(zenPlace.id, result);
+
 									});
 
-									if (index == results.length-1) { // remove fullScreenFragment
+									if (index == places.length-1) { // remove fullScreenFragment
 										body.removeChild(body.firstChild);
+										body.style.backgroundPosition = "-500px";
 									}
 
 								}, index*600);
@@ -67,7 +77,50 @@ SearchEvents = function() {
 						});
 					});
 				});
-			}
+			}	
+
+			// 		PlacesService.getPlacesFromRequest(request, function(results) {
+			// 			var body = document.getElementsByTagName("body")[0];
+			// 			var fullScreenFragment = document.createDocumentFragment();
+			// 			var resultsContainer = document.getElementById('results');
+
+			// 			FragmentController.composeFullScreenFragment(fullScreenFragment, Constants.DELAY);
+			// 			body.insertBefore(fullScreenFragment, body.firstChild);
+
+			// 			resultsContainer.innerHTML = '';
+
+			// 			results.forEach(function(result, index){
+			// 				(function(index){
+			// 					setTimeout(function(){
+			// 						var placeId = result.place_id;
+
+			// 						PlacesService.getPlaceDetailsFromPlaceId(placeId, function(result) {
+			// 							MapController.composeResultMarker(result);
+			// 							var resultFragment = document.createDocumentFragment();
+			// 							FragmentController.composeResultFragment(resultFragment, result, Constants.DEFAULT);
+			// 							resultsContainer.appendChild(resultFragment);
+			// 							CacheUtility.storePlaceResult(placeId, result);
+
+			// 							var zenPlace = new ZenPlace(AppUtility.generateZenPlaceId());
+			// 							Object.keys(result).map(function(key, index) {
+			// 								if (typeof zenPlace[key] !== 'undefined' && key != 'id' && result.hasOwnProperty(key)) {
+			// 									zenPlace[key] = result[key];   
+			// 								}
+			// 							});
+
+			// 							CacheUtility.storeZenPlaceResult(zenPlace.id, result);
+			// 						});
+
+			// 						if (index == results.length-1) { // remove fullScreenFragment
+			// 							body.removeChild(body.firstChild);
+			// 						}
+
+			// 					}, index*600);
+			// 				})(index);
+			// 			});
+			// 		});
+			// 	});
+			// }
 		}
 	}
 }();

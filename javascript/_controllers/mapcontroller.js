@@ -28,7 +28,7 @@ MapController = function() {
 				map: window.map,
 				position: result.geometry.location,
 				animation: google.maps.Animation.DROP,
-				icon: (result.photos) ? result.photos[0].getUrl({'maxWidth': 35, 'maxHeight': 35}) : defaultIcon
+				icon: (result.photos && result.photos[0].getUrl) ? result.photos[0].getUrl({'maxWidth': 35, 'maxHeight': 35}) : defaultIcon
 			});	
 			Globals.markers.push(marker);
 		}

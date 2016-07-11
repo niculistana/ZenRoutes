@@ -1,24 +1,21 @@
 PlacesService = function() {
 	return {
-		getPlacesFromRequest: function(request, callback) {
+		getPlacesFromCoordinates: function(coordinates, callback) {
+			var [x, y] = coordinates.split(',').map(parseFloat);
+			var origin = {lat: x, lng: y};
+			
+			var request = {
+				location: origin,
+				radius: 12000,
+				keyword: 'tourist attraction'
+			};
+
 			var service = new google.maps.places.PlacesService(map);
 			service.nearbySearch(request, function (results, status) {
 				if (status === google.maps.places.PlacesServiceStatus.OK) {
 					callback(results);
 				} else {
 					console.log('nearbySearch was not successful due to the following: ' + status);
-				}
-			});
-		},
-		getPlaceDetailsFromPlaceId: function(placeId, callback) {
-			var service = new google.maps.places.PlacesService(map);
-			service.getDetails({
-				placeId: placeId
-			}, function(result,status) {
-				if (status === google.maps.places.PlacesServiceStatus.OK) {
-					callback(result);
-				} else {
-					console.log('getDetails was not successful due to the following: ' + status);
 				}
 			});
 		}
