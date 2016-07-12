@@ -5,8 +5,8 @@ CacheUtility = function() {
 	var queryCacheKey = Constants.QUERY_CACHE_KEY;
 	var geocodeCacheKey = Constants.GEOCODE_CACHE_KEY;
 	var placesCacheKey = Constants.PLACES_CACHE_KEY;
-	var placeDetailsCacheKey = Constants.PLACE_DETAILS_CACHE_KEY;
 	var zenPlaceCacheKey = Constants.ZEN_PLACE_CACHE_KEY;
+	var zenPlaceDetailsCacheKey = Constants.ZEN_PLACE_DETAILS_CACHE_KEY;
 
 	return {
 		storeQuery: function(query) {
@@ -30,20 +30,20 @@ CacheUtility = function() {
 		clearPlacesCache: function() {
 			localStorage[placesCacheKey] = '';
 		},
-		storePlaceDetailsResult: function(placeId, result) {
-			Globals.placeDetailsCache[placeId] = result;
-			localStorage.setItem(placeDetailsCacheKey, JSON.stringify(Globals.placeDetailsCache));
-		},
-		clearPlaceDetailsCache: function() {
-			localStorage[placeDetailsCacheKey] = '';
-		},	
-		storeZenPlaceResult: function(zenPlaceId, result) {
-			Globals.zenPlaceCache[zenPlaceId] = result;
+		storeZenPlaceResult: function(placeId, result) {
+			Globals.zenPlaceCache[placeId] = result;
 			localStorage.setItem(zenPlaceCacheKey, JSON.stringify(Globals.zenPlaceCache));
 		},
 		clearZenPlaceCache: function() {
 			localStorage[zenPlaceCacheKey] = '';
-		}		
+		},
+		storeZenPlaceDetailsResult: function(zenPlaceId, result) {
+			Globals.zenPlaceDetailsCache[zenPlaceId] = result;
+			localStorage.setItem(zenPlaceDetailsCacheKey, JSON.stringify(Globals.zenPlaceDetailsCache));
+		},
+		clearZenPlaceDetailsCache: function() {
+			localStorage[zenPlaceDetailsCacheKey] = '';
+		}	
 	}
 }();
 

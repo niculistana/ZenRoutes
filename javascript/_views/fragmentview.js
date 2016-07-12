@@ -19,6 +19,7 @@ var SearchView = function(){
 			search_input.setAttribute('class', 'form-control');
 			search_input.setAttribute('id', 'search-input');
 			search_input.setAttribute('placeholder', Strings.SEARCH_PLACEHOLDER_TEXT);
+			search_input.setAttribute('autofocus', true);
 
 			input_group.appendChild(input_group_addon);
 			input_group_addon.appendChild(glyphicon);

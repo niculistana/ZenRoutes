@@ -73,8 +73,8 @@ var ZenPlace = function(id){
 	this.formatted_address = '';
 	this.formatted_phone_number = '';
 	this.website = '';
-	this.photos = [];
-	this.zen_level = -1;
+	this.mainPhotoUrl = '';
+	this.zenLevel = -1;
 	this.options = {
 		saved: false,
 		promoted: false,
@@ -82,15 +82,9 @@ var ZenPlace = function(id){
 	}
 };
 
-if (typeof(Number.prototype.toRad) === 'undefined') {
-	Number.prototype.toRad = function() {
-		return this * Math.PI / 180;
-	}
-};
-
 ZenPlace.prototype = {
 	setZenLevel: function(overall_rating, geotag_count) {
-		this.zen_level = overall_rating+geotag_count;
+		this.zenLevel = overall_rating+geotag_count;
 	}
 };
 
@@ -172,17 +166,19 @@ MapController = function() {
 
 		composeResultMarker: function(result) {
 			var defaultIcon = {
-				url: result.icon,
-				scaledSize: new google.maps.Size(35, 35),
+				url: './assets/icons/markers.png',
+				scaledSize: new google.maps.Size(20, 20),
 				origin: new google.maps.Point(0, 0),
-				anchor: new google.maps.Point(15, 15)
+				anchor: new google.maps.Point(10, 10)
 			};
+
+			var iconUrl = (result.mainPhotoUrl !== '') ? result.mainPhotoUrl.slice(0, -12) + 'w35-h35-k/' : defaultIcon;
 
 			var marker = new google.maps.Marker({
 				map: window.map,
 				position: result.geometry.location,
 				animation: google.maps.Animation.DROP,
-				icon: (result.photos && result.photos[0].getUrl) ? result.photos[0].getUrl({'maxWidth': 35, 'maxHeight': 35}) : defaultIcon
+				icon: iconUrl
 			});	
 			Globals.markers.push(marker);
 		}
@@ -194,18 +190,38 @@ module.exports = MapController;
 var Globals = require('../_variables/globals');
 var CacheUtility = require('../cacheutility');
 var PlaceDetailsService = require('../_apiservices/placedetailsservice');
+var AppUtility = require('../_utility/apputility');
+var ZenPlace = require('../_classes/zenplace');
 
 PlaceDetailsController = function() {
 	return{
 		getPlaceDetailsResult: function(placeId, callback) {
-			if (Globals.placeDetailsCache[placeId]) {
-				var places = Globals.placeDetailsCache[placeId];
-				callback(places);
+			if (Globals.zenPlaceCache[placeId]) {
+				var zenPlaceKey = Globals.zenPlaceCache[placeId];
+				var zenPlaceDetails = Globals.zenPlaceDetailsCache[zenPlaceKey];
+				callback(zenPlaceDetails);
 			} else {
 				PlaceDetailsService.getPlaceDetailsFromPlaceId(placeId, function(result) {
-					var placeDetails = result;
-					CacheUtility.storePlaceDetailsResult(placeId,placeDetails);
-					callback(placeDetails);
+				var zenPlaceId = AppUtility.generateZenPlaceId();
+					while (Globals.zenPlaceDetailsCache[zenPlaceId]) {
+						zenPlaceId = AppUtility.generateZenPlaceId();
+					}
+
+					var zenPlaceDetails = new ZenPlace(zenPlaceId);
+
+					Object.keys(result).map(function(key, index) {
+						if (typeof zenPlaceDetails[key] !== 'undefined' && key != 'id' && result.hasOwnProperty(key)) {
+							zenPlaceDetails[key] = result[key];   
+						}
+					});
+
+					if (result.photos) {
+						zenPlaceDetails.mainPhotoUrl = result.photos[0].getUrl({'maxWidth': 500, 'maxHeight': 500});
+					}
+					
+					CacheUtility.storeZenPlaceResult(placeId,zenPlaceId);
+					CacheUtility.storeZenPlaceDetailsResult(zenPlaceId,zenPlaceDetails);
+					callback(zenPlaceDetails);
 				});
 			}
 		}
@@ -213,7 +229,7 @@ PlaceDetailsController = function() {
 }();
 
 module.exports = PlaceDetailsController;
-},{"../_apiservices/placedetailsservice":2,"../_variables/globals":12,"../cacheutility":17}],9:[function(require,module,exports){
+},{"../_apiservices/placedetailsservice":2,"../_classes/zenplace":4,"../_utility/apputility":10,"../_variables/globals":12,"../cacheutility":17}],9:[function(require,module,exports){
 var Globals = require('../_variables/globals');
 var CacheUtility = require('../cacheutility');
 var PlacesService = require('../_apiservices/placesservice');
@@ -238,7 +254,19 @@ PlacesController = function() {
 module.exports = PlacesController;
 },{"../_apiservices/placesservice":3,"../_variables/globals":12,"../cacheutility":17}],10:[function(require,module,exports){
 AppUtility = function(){
+		if (typeof(Number.prototype.toRad) === 'undefined') {
+			Number.prototype.toRad = function() {
+				return this * Math.PI / 180;
+			}
+		};
+
 	return {
+		generateMetaTag: function() {
+			var m = document.createElement('meta'); 
+			m.name = 'description'; 
+			m.content = 'This tutorial has some helpful information for you, if you want to track how many hits come from browsers where JavaScript has been disabled.'; 
+			document.head.appendChild(m);
+		},
 		generateZenPlaceId: function(){
 			var uniqueId = 'xxxxxxxxxxxxxxxxxxxxzpxxxxxxxxxx'.replace(/[x]/g, function(c) {
 				var r = Math.random()*16|0, v = c == 'x' ? r : (r&0x3|0x8);
@@ -276,8 +304,8 @@ const DIM = 'dim';
 const QUERY_CACHE_KEY = 'queryCache';
 const GEOCODE_CACHE_KEY = 'geocodeCache';
 const PLACES_CACHE_KEY = 'placesCache';
-const PLACE_DETAILS_CACHE_KEY = 'placeDetailsCache';
 const ZEN_PLACE_CACHE_KEY = 'zenPlaceCache';
+const ZEN_PLACE_DETAILS_CACHE_KEY = 'zenPlaceDetailsCache';
 
 module.exports = {
 	INLINE,
@@ -288,8 +316,8 @@ module.exports = {
 	QUERY_CACHE_KEY,
 	GEOCODE_CACHE_KEY,
 	PLACES_CACHE_KEY,
-	PLACE_DETAILS_CACHE_KEY,
-	ZEN_PLACE_CACHE_KEY
+	ZEN_PLACE_CACHE_KEY,
+	ZEN_PLACE_DETAILS_CACHE_KEY
 };
 },{}],12:[function(require,module,exports){
 var Constants = require('./constants');
@@ -305,8 +333,8 @@ Globals = function () {
 		queryCache: (localStorage.getItem(Constants.QUERY_CACHE_KEY)) ? JSON.parse(localStorage.getItem(Constants.QUERY_CACHE_KEY)) : [],
 		geocodeCache: (localStorage.getItem(Constants.GEOCODE_CACHE_KEY)) ? JSON.parse(localStorage.getItem(Constants.GEOCODE_CACHE_KEY)) : {},
 		placesCache: (localStorage.getItem(Constants.PLACES_CACHE_KEY)) ? JSON.parse(localStorage.getItem(Constants.PLACES_CACHE_KEY)) : {},
-		placeDetailsCache: (localStorage.getItem(Constants.PLACE_DETAILS_CACHE_KEY)) ? JSON.parse(localStorage.getItem(Constants.PLACE_DETAILS_CACHE_KEY)) : {},
-		zenPlaceCache: (localStorage.getItem(Constants.ZEN_PLACE_CACHE_KEY)) ? JSON.parse(localStorage.getItem(Constants.ZEN_PLACE_CACHE_KEY)) : {}
+		zenPlaceCache: (localStorage.getItem(Constants.ZEN_PLACE_CACHE_KEY)) ? JSON.parse(localStorage.getItem(Constants.ZEN_PLACE_CACHE_KEY)) : {},
+		zenPlaceDetailsCache: (localStorage.getItem(Constants.ZEN_PLACE_DETAILS_CACHE_KEY)) ? JSON.parse(localStorage.getItem(Constants.ZEN_PLACE_DETAILS_CACHE_KEY)) : {}
 	};
 }();
 
@@ -348,6 +376,7 @@ var SearchView = function(){
 			search_input.setAttribute('class', 'form-control');
 			search_input.setAttribute('id', 'search-input');
 			search_input.setAttribute('placeholder', Strings.SEARCH_PLACEHOLDER_TEXT);
+			search_input.setAttribute('autofocus', true);
 
 			input_group.appendChild(input_group_addon);
 			input_group_addon.appendChild(glyphicon);
@@ -515,8 +544,8 @@ CacheUtility = function() {
 	var queryCacheKey = Constants.QUERY_CACHE_KEY;
 	var geocodeCacheKey = Constants.GEOCODE_CACHE_KEY;
 	var placesCacheKey = Constants.PLACES_CACHE_KEY;
-	var placeDetailsCacheKey = Constants.PLACE_DETAILS_CACHE_KEY;
 	var zenPlaceCacheKey = Constants.ZEN_PLACE_CACHE_KEY;
+	var zenPlaceDetailsCacheKey = Constants.ZEN_PLACE_DETAILS_CACHE_KEY;
 
 	return {
 		storeQuery: function(query) {
@@ -540,20 +569,20 @@ CacheUtility = function() {
 		clearPlacesCache: function() {
 			localStorage[placesCacheKey] = '';
 		},
-		storePlaceDetailsResult: function(placeId, result) {
-			Globals.placeDetailsCache[placeId] = result;
-			localStorage.setItem(placeDetailsCacheKey, JSON.stringify(Globals.placeDetailsCache));
-		},
-		clearPlaceDetailsCache: function() {
-			localStorage[placeDetailsCacheKey] = '';
-		},	
-		storeZenPlaceResult: function(zenPlaceId, result) {
-			Globals.zenPlaceCache[zenPlaceId] = result;
+		storeZenPlaceResult: function(placeId, result) {
+			Globals.zenPlaceCache[placeId] = result;
 			localStorage.setItem(zenPlaceCacheKey, JSON.stringify(Globals.zenPlaceCache));
 		},
 		clearZenPlaceCache: function() {
 			localStorage[zenPlaceCacheKey] = '';
-		}		
+		},
+		storeZenPlaceDetailsResult: function(zenPlaceId, result) {
+			Globals.zenPlaceDetailsCache[zenPlaceId] = result;
+			localStorage.setItem(zenPlaceDetailsCacheKey, JSON.stringify(Globals.zenPlaceDetailsCache));
+		},
+		clearZenPlaceDetailsCache: function() {
+			localStorage[zenPlaceDetailsCacheKey] = '';
+		}	
 	}
 }();
 
@@ -616,7 +645,6 @@ SearchEvents = function() {
 										var resultFragment = document.createDocumentFragment();
 										FragmentController.composeResultFragment(resultFragment, placeDetails, Constants.DEFAULT);
 										resultsContainer.appendChild(resultFragment);
-
 										// var zenPlace = new ZenPlace(AppUtility.generateZenPlaceId());
 										// Object.keys(result).map(function(key, index) {
 										// 	if (typeof zenPlace[key] !== 'undefined' && key != 'id' && result.hasOwnProperty(key)) {
@@ -720,7 +748,6 @@ function initComponents() {
 		var result = autocomplete.getPlace();
 		if (result.geometry) {
 			DomEvents.SearchEvents.searchForPlaces();
-
 		} else {
 			document.getElementById('search-input').placeholder = Strings.SEARCH_PLACEHOLDER_TEXT;
 		}
@@ -731,8 +758,7 @@ function initComponents() {
 		{"featureType":"road.highway","elementType":"geometry","stylers":[{"lightness":60},{"color":"#BCB4B5"}]},
 		{"featureType":"water","stylers":[{"color":"#4397CE"}]}]
 
-	var styledMap = new google.maps.StyledMapType(styles,
-	{name: "Styled Map"});
+	var styledMap = new google.maps.StyledMapType(styles,{name: "Zen Places Style"});
 
 	var mapOptions = {
 		zoom: 12,

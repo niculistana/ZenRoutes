@@ -25,17 +25,13 @@ a:hover {
 }
 
 body {
-	width: 100%;
 	background-image: url("../assets/images/nyc_skyline.jpg");
 	background-repeat: no-repeat;
-	min-width: 1200px;
-	margin: 0px;
 	-webkit-transition: all .8s ease;
 	-moz-transition: all .8s ease;
 	-o-transition: all .8s ease;
 	-ms-transition: all .8s ease;
 	transition: all .8s ease;
-	overflow: hidden;
 }
 
 .content {

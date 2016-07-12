@@ -55,7 +55,6 @@ SearchEvents = function() {
 										var resultFragment = document.createDocumentFragment();
 										FragmentController.composeResultFragment(resultFragment, placeDetails, Constants.DEFAULT);
 										resultsContainer.appendChild(resultFragment);
-
 										// var zenPlace = new ZenPlace(AppUtility.generateZenPlaceId());
 										// Object.keys(result).map(function(key, index) {
 										// 	if (typeof zenPlace[key] !== 'undefined' && key != 'id' && result.hasOwnProperty(key)) {

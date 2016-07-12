@@ -18,17 +18,19 @@ MapController = function() {
 
 		composeResultMarker: function(result) {
 			var defaultIcon = {
-				url: result.icon,
-				scaledSize: new google.maps.Size(35, 35),
+				url: './assets/icons/markers.png',
+				scaledSize: new google.maps.Size(20, 20),
 				origin: new google.maps.Point(0, 0),
-				anchor: new google.maps.Point(15, 15)
+				anchor: new google.maps.Point(10, 10)
 			};
+
+			var iconUrl = (result.mainPhotoUrl !== '') ? result.mainPhotoUrl.slice(0, -12) + 'w35-h35-k/' : defaultIcon;
 
 			var marker = new google.maps.Marker({
 				map: window.map,
 				position: result.geometry.location,
 				animation: google.maps.Animation.DROP,
-				icon: (result.photos && result.photos[0].getUrl) ? result.photos[0].getUrl({'maxWidth': 35, 'maxHeight': 35}) : defaultIcon
+				icon: iconUrl
 			});	
 			Globals.markers.push(marker);
 		}

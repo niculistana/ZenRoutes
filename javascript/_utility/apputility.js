@@ -1,5 +1,17 @@
 AppUtility = function(){
+		if (typeof(Number.prototype.toRad) === 'undefined') {
+			Number.prototype.toRad = function() {
+				return this * Math.PI / 180;
+			}
+		};
+
 	return {
+		generateMetaTag: function() {
+			var m = document.createElement('meta'); 
+			m.name = 'description'; 
+			m.content = 'This tutorial has some helpful information for you, if you want to track how many hits come from browsers where JavaScript has been disabled.'; 
+			document.head.appendChild(m);
+		},
 		generateZenPlaceId: function(){
 			var uniqueId = 'xxxxxxxxxxxxxxxxxxxxzpxxxxxxxxxx'.replace(/[x]/g, function(c) {
 				var r = Math.random()*16|0, v = c == 'x' ? r : (r&0x3|0x8);

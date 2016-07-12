@@ -28,7 +28,6 @@ function initComponents() {
 		var result = autocomplete.getPlace();
 		if (result.geometry) {
 			DomEvents.SearchEvents.searchForPlaces();
-
 		} else {
 			document.getElementById('search-input').placeholder = Strings.SEARCH_PLACEHOLDER_TEXT;
 		}
@@ -39,8 +38,7 @@ function initComponents() {
 		{"featureType":"road.highway","elementType":"geometry","stylers":[{"lightness":60},{"color":"#BCB4B5"}]},
 		{"featureType":"water","stylers":[{"color":"#4397CE"}]}]
 
-	var styledMap = new google.maps.StyledMapType(styles,
-	{name: "Styled Map"});
+	var styledMap = new google.maps.StyledMapType(styles,{name: "Zen Places Style"});
 
 	var mapOptions = {
 		zoom: 12,
