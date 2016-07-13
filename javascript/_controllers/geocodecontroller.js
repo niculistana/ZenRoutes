@@ -1,4 +1,3 @@
-var Globals = require('../_variables/globals');
 var CacheUtility = require('../cacheutility');
 var GeocodeService = require('../_apiservices/geocodeservice');
 

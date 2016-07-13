@@ -58,11 +58,17 @@ body {
 	font-family: $secondary-font;
 	letter-spacing: 1px;
 	text-transform: uppercase;
-	background-color: $muted-blue;
 }
 
 .btn:focus, .btn:active:focus, .btn.active:focus {
 	outline: 0 none;
+}
+
+.btn-add {
+	@include button-variant(white, $muted-blue, blue);
+}
+.btn-remove {
+	@include button-variant(red, white, blue);
 }
 
 #search-input {
@@ -164,13 +170,19 @@ body {
 			background-color: $oak-brown;
 			border-radius: 0;
 			border: 0;
+			white-space: nowrap;
 			ul {
+				width: 100%;
+				margin: 0px;
 				li {
+					float:left;
+					width: 33.33%;
 					a {
 						color: #fff;
 					}
 				}
 				li.active {
+					height: auto;
 					a {
 						color: #000;
 					}
@@ -249,7 +261,6 @@ body {
 		text-align: center;
 	}
 }
-
 
 ::-webkit-scrollbar {
 	-webkit-appearance: none;

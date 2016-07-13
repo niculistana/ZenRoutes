@@ -17,7 +17,7 @@ FragmentController = function() {
 			if (view === Constants.PLACES) {
 				FragmentView.ResultView().resultsAsPlaces(fragment, result);
 			} else if (view === Constants.ROUTES) {
-				FragmentView.ResultView().resultsAsRoutes(fragment, result);
+				FragmentView.ResultView().resultsAsRoute(fragment, result);
 			}
 		},
 

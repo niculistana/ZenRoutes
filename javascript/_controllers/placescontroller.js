@@ -1,5 +1,3 @@
-var Globals = require('../_variables/globals');
-var CacheUtility = require('../cacheutility');
 var PlacesService = require('../_apiservices/placesservice');
 
 PlacesController = function() {

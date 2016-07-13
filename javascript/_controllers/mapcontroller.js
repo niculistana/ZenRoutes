@@ -1,4 +1,3 @@
-var Constants = require('./../_variables/constants');
 var Globals = require('./../_variables/globals');
 
 MapController = function() {

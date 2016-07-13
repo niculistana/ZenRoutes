@@ -1,5 +1,6 @@
 var DomEvents = require('./../domevents');
 var Strings = require('./../_variables/strings');
+var RouteController = require('./../_controllers/routecontroller');
 
 var SearchView = function(){
 	var goButtonText = Strings.GO_BUTTON_TEXT;
@@ -63,7 +64,7 @@ var ResultView = function() {
 			var cardImage = document.createElement('img');
 			var cardName = document.createElement('h3');
 			var milesAway = document.createElement('p');
-			var saveButton = document.createElement('button');
+			var addToRouteButton = document.createElement('button');
 
 			if (result.mainPhotoUrl) {
 				cardImage.setAttribute('src', result.mainPhotoUrl);
@@ -80,14 +81,32 @@ var ResultView = function() {
 
 			cardName.innerHTML = result.name;
 			milesAway.innerHTML = result.formatted_address;
-			saveButton.setAttribute('class', 'btn btn-primary');
-			saveButton.innerHTML = 'Add to route';
+			addToRouteButton.setAttribute('class', 'btn btn-add');
+			addToRouteButton.innerHTML = Strings.ADD_TO_ROUTE_TEXT;
+
+			addToRouteButton.addEventListener('click', function() {
+				var [placeControl,routeControl,saveControl] = document.getElementsByClassName('nav navbar-nav')[0].children;
+
+				if (addToRouteButton.className === 'btn btn-add') {
+					addToRouteButton.className = 'btn btn-remove'
+					addToRouteButton.innerHTML = Strings.REMOVE_FROM_ROUTE_TEXT;
+					RouteController.addToRoute(result.id);
+				} else {
+					addToRouteButton.className = 'btn btn-add'
+					addToRouteButton.innerHTML = Strings.ADD_TO_ROUTE_TEXT;
+					RouteController.removeFromRoute(result.id);					
+				}
+
+				routeControl.className = (Globals.route.length > 0) ? '' : 'disabled';
+				routeControl.firstChild.innerHTML = (Globals.route.length > 0) ? Strings.ROUTES_BUTTON_TEXT + ' (' + Globals.route.length + ')' : Strings.ROUTES_BUTTON_TEXT;
+				saveControl.className = (Globals.route.length > 0) ? '' : 'disabled';
+			});
 
 			cardInfo.setAttribute('class', 'card-info');
 			cardInfo.appendChild(cardImageContainer); 
 			cardInfo.appendChild(cardName); 
 			cardInfo.appendChild(milesAway); 
-			cardInfo.appendChild(saveButton); 
+			cardInfo.appendChild(addToRouteButton); 
 
 			cardContainer.setAttribute('class', 'card-container');
 			cardContainer.appendChild(cardInfo);
@@ -95,7 +114,7 @@ var ResultView = function() {
 			fragment.appendChild(cardContainer);
 		},
 
-		resultsAsRoutes: function(fragment) {
+		resultsAsRoute: function(fragment) {
 			var table = document.createElement('table');
 			table.setAttribute('class', 'table table-hover table-responsive');
 			
@@ -136,11 +155,9 @@ var ResultMenuView = function() {
 	return {
 		resultMenuAsInline: function(fragment, result) {
 			var navbar = document.createElement('nav');
-			var navbarContainer = document.createElement('div');
 			var navbarList = document.createElement('ul');
 
 			navbar.setAttribute('class', 'navbar navbar-default');
-			navbarContainer.setAttribute('class', 'container-fluid');
 			navbarList.setAttribute('class', 'nav navbar-nav');
 
 			var menuItems = [placesButtonText,routesButtonText,saveButtonText];
@@ -151,7 +168,7 @@ var ResultMenuView = function() {
 				if (index === 0) {
 					navBarListItem.setAttribute('class', 'active');
 				} else {
-					// navBarListItem.setAttribute('class', 'disabled');
+					navBarListItem.setAttribute('class', 'disabled');
 				}
 				navBarListItemLink.innerHTML = result;
 
@@ -163,8 +180,19 @@ var ResultMenuView = function() {
 								e.target.parentElement.parentElement.children[i].className = '';
 							}
 						}
-
 						e.target.parentElement.className = 'active';
+					}
+
+					if (e.target.parentElement.className !== 'disabled') {
+						if (result === placesButtonText) {
+							console.log('places');
+						}else if (result === routesButtonText) {
+							console.log('routes');
+							// render resultsAsRoute
+						} else {
+							console.log('save')
+							// Create entry in database with route_id | [route]
+						}
 					}
 				});
 
@@ -172,8 +200,7 @@ var ResultMenuView = function() {
 				navbarList.appendChild(navBarListItem);
 			});
 
-			navbarContainer.appendChild(navbarList);
-			navbar.appendChild(navbarContainer);
+			navbar.appendChild(navbarList);
 			fragment.appendChild(navbar);
 		}
 	}

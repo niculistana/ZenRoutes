@@ -52,11 +52,44 @@ body {
   font-weight: 600;
   font-family: "Heebo", sans-serif;
   letter-spacing: 1px;
-  text-transform: uppercase;
-  background-color: #4397CE; }
+  text-transform: uppercase; }
 
 .btn:focus, .btn:active:focus, .btn.active:focus {
   outline: 0 none; }
+
+.btn-add {
+  color: white;
+  background-color: #4397CE;
+  border-color: blue; }
+  .btn-add:hover, .btn-add:focus, .btn-add:active, .btn-add.active, .open > .btn-add.dropdown-toggle {
+    color: white;
+    background-color: #2e7db0;
+    border-color: #0000c2; }
+  .btn-add:active, .btn-add.active, .open > .btn-add.dropdown-toggle {
+    background-image: none; }
+  .btn-add.disabled, .btn-add.disabled:hover, .btn-add.disabled:focus, .btn-add.disabled:active, .btn-add.disabled.active, .btn-add[disabled], .btn-add[disabled]:hover, .btn-add[disabled]:focus, .btn-add[disabled]:active, .btn-add[disabled].active, fieldset[disabled] .btn-add, fieldset[disabled] .btn-add:hover, fieldset[disabled] .btn-add:focus, fieldset[disabled] .btn-add:active, fieldset[disabled] .btn-add.active {
+    background-color: #4397CE;
+    border-color: blue; }
+  .btn-add .badge {
+    color: #4397CE;
+    background-color: white; }
+
+.btn-remove {
+  color: red;
+  background-color: white;
+  border-color: blue; }
+  .btn-remove:hover, .btn-remove:focus, .btn-remove:active, .btn-remove.active, .open > .btn-remove.dropdown-toggle {
+    color: red;
+    background-color: #e6e6e6;
+    border-color: #0000c2; }
+  .btn-remove:active, .btn-remove.active, .open > .btn-remove.dropdown-toggle {
+    background-image: none; }
+  .btn-remove.disabled, .btn-remove.disabled:hover, .btn-remove.disabled:focus, .btn-remove.disabled:active, .btn-remove.disabled.active, .btn-remove[disabled], .btn-remove[disabled]:hover, .btn-remove[disabled]:focus, .btn-remove[disabled]:active, .btn-remove[disabled].active, fieldset[disabled] .btn-remove, fieldset[disabled] .btn-remove:hover, fieldset[disabled] .btn-remove:focus, fieldset[disabled] .btn-remove:active, fieldset[disabled] .btn-remove.active {
+    background-color: white;
+    border-color: blue; }
+  .btn-remove .badge {
+    color: white;
+    background-color: red; }
 
 #search-input {
   font-family: "Heebo", sans-serif;
@@ -129,13 +162,22 @@ body {
     .resultsContainer #results-menu .navbar-default {
       background-color: #51484A;
       border-radius: 0;
-      border: 0; }
-      .resultsContainer #results-menu .navbar-default ul li a {
-        color: #fff; }
-      .resultsContainer #results-menu .navbar-default ul li.active a {
-        color: #000; }
-      .resultsContainer #results-menu .navbar-default ul li.disabled a {
-        color: #777; }
+      border: 0;
+      white-space: nowrap; }
+      .resultsContainer #results-menu .navbar-default ul {
+        width: 100%;
+        margin: 0px; }
+        .resultsContainer #results-menu .navbar-default ul li {
+          float: left;
+          width: 33.33%; }
+          .resultsContainer #results-menu .navbar-default ul li a {
+            color: #fff; }
+        .resultsContainer #results-menu .navbar-default ul li.active {
+          height: auto; }
+          .resultsContainer #results-menu .navbar-default ul li.active a {
+            color: #000; }
+        .resultsContainer #results-menu .navbar-default ul li.disabled a {
+          color: #777; }
 
 .card-container {
   background-color: #fff;

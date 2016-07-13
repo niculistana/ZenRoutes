@@ -19,7 +19,7 @@ GeocodeService = function() {
 }();
 
 module.exports = GeocodeService;
-},{"./../_variables/globals":12,"./../cacheutility":17}],2:[function(require,module,exports){
+},{"./../_variables/globals":13,"./../cacheutility":18}],2:[function(require,module,exports){
 PlaceDetailsService = function() {
 	return {
 		getPlaceDetailsFromPlaceId: function(placeId, callback) {
@@ -110,7 +110,7 @@ FragmentController = function() {
 			if (view === Constants.PLACES) {
 				FragmentView.ResultView().resultsAsPlaces(fragment, result);
 			} else if (view === Constants.ROUTES) {
-				FragmentView.ResultView().resultsAsRoutes(fragment, result);
+				FragmentView.ResultView().resultsAsRoute(fragment, result);
 			}
 		},
 
@@ -131,8 +131,7 @@ FragmentController = function() {
 }();
 
 module.exports = FragmentController;
-},{"./../_variables/constants":11,"./../_views/fragmentview":14}],6:[function(require,module,exports){
-var Globals = require('../_variables/globals');
+},{"./../_variables/constants":12,"./../_views/fragmentview":15}],6:[function(require,module,exports){
 var CacheUtility = require('../cacheutility');
 var GeocodeService = require('../_apiservices/geocodeservice');
 
@@ -149,8 +148,7 @@ GeocodeController = function() {
 }();
 
 module.exports = GeocodeController;
-},{"../_apiservices/geocodeservice":1,"../_variables/globals":12,"../cacheutility":17}],7:[function(require,module,exports){
-var Constants = require('./../_variables/constants');
+},{"../_apiservices/geocodeservice":1,"../cacheutility":18}],7:[function(require,module,exports){
 var Globals = require('./../_variables/globals');
 
 MapController = function() {
@@ -190,7 +188,7 @@ MapController = function() {
 }();
 
 module.exports = MapController;
-},{"./../_variables/constants":11,"./../_variables/globals":12}],8:[function(require,module,exports){
+},{"./../_variables/globals":13}],8:[function(require,module,exports){
 var Globals = require('../_variables/globals');
 var CacheUtility = require('../cacheutility');
 var PlaceDetailsService = require('../_apiservices/placedetailsservice');
@@ -226,9 +224,7 @@ PlaceDetailsController = function() {
 }();
 
 module.exports = PlaceDetailsController;
-},{"../_apiservices/placedetailsservice":2,"../_classes/zenplace":4,"../_utility/apputility":10,"../_variables/globals":12,"../cacheutility":17}],9:[function(require,module,exports){
-var Globals = require('../_variables/globals');
-var CacheUtility = require('../cacheutility');
+},{"../_apiservices/placedetailsservice":2,"../_classes/zenplace":4,"../_utility/apputility":11,"../_variables/globals":13,"../cacheutility":18}],9:[function(require,module,exports){
 var PlacesService = require('../_apiservices/placesservice');
 
 PlacesController = function() {
@@ -243,7 +239,22 @@ PlacesController = function() {
 }();
 
 module.exports = PlacesController;
-},{"../_apiservices/placesservice":3,"../_variables/globals":12,"../cacheutility":17}],10:[function(require,module,exports){
+},{"../_apiservices/placesservice":3}],10:[function(require,module,exports){
+var Globals = require('../_variables/globals');
+
+RouteController = function() {
+	return{
+		removeFromRoute: function(resultId) {
+			Globals.route.splice(resultId, 1);
+		},
+		addToRoute: function(resultId) {
+			Globals.route.push(resultId);
+		}
+	}
+}();
+
+module.exports = RouteController;
+},{"../_variables/globals":13}],11:[function(require,module,exports){
 AppUtility = function(){
 		if (typeof(Number.prototype.toRad) === 'undefined') {
 			Number.prototype.toRad = function() {
@@ -283,7 +294,7 @@ AppUtility = function(){
 }();
 
 module.exports = AppUtility;
-},{}],11:[function(require,module,exports){
+},{}],12:[function(require,module,exports){
 const INLINE = 'inline';
 const DEFAULT = 'default';
 
@@ -314,7 +325,7 @@ module.exports = {
 	ZEN_PLACE_DETAILS_CACHE_KEY,
 	ZEN_PLACES_RESULT_CACHE_KEY
 };
-},{}],12:[function(require,module,exports){
+},{}],13:[function(require,module,exports){
 var Constants = require('./constants');
 
 Globals = function () {
@@ -323,8 +334,8 @@ Globals = function () {
 		current_search_view: Constants.INLINE,
 		queries: [],
 		results: [],
-		resultsCart:[],
 		markers:[],
+		route:[],
 		zenPlacesResult:[],
 		queryCache: (localStorage.getItem(Constants.QUERY_CACHE_KEY)) ? JSON.parse(localStorage.getItem(Constants.QUERY_CACHE_KEY)) : [],
 		geocodeCache: (localStorage.getItem(Constants.GEOCODE_CACHE_KEY)) ? JSON.parse(localStorage.getItem(Constants.GEOCODE_CACHE_KEY)) : {},
@@ -336,14 +347,16 @@ Globals = function () {
 }();
 
 module.exports = Globals;
-},{"./constants":11}],13:[function(require,module,exports){
+},{"./constants":12}],14:[function(require,module,exports){
 const SEARCH_PLACEHOLDER_TEXT = 'Which city are you visiting?'
 
 const LOADING_RESULTS = 'Hang on for a sec while we gather places to go to...';
 
 const GO_BUTTON_TEXT = 'GO';
 const PLACES_BUTTON_TEXT = 'PLACES';
-const ROUTES_BUTTON_TEXT = 'MY ROUTE';
+const ADD_TO_ROUTE_TEXT = 'ADD TO ROUTE';
+const REMOVE_FROM_ROUTE_TEXT = 'REMOVE FROM ROUTE';
+const ROUTES_BUTTON_TEXT = 'ROUTE';
 const SAVE_BUTTON_TEXT = 'SAVE';
 const SETTINGS_BUTTON_TEXT = 'SETTINGS';
 
@@ -353,13 +366,16 @@ module.exports = {
 	LOADING_RESULTS,
 	GO_BUTTON_TEXT,
 	PLACES_BUTTON_TEXT,
+	ADD_TO_ROUTE_TEXT,
+	REMOVE_FROM_ROUTE_TEXT,
 	ROUTES_BUTTON_TEXT,
 	SAVE_BUTTON_TEXT,
 	SETTINGS_BUTTON_TEXT
 };
-},{}],14:[function(require,module,exports){
+},{}],15:[function(require,module,exports){
 var DomEvents = require('./../domevents');
 var Strings = require('./../_variables/strings');
+var RouteController = require('./../_controllers/routecontroller');
 
 var SearchView = function(){
 	var goButtonText = Strings.GO_BUTTON_TEXT;
@@ -423,7 +439,7 @@ var ResultView = function() {
 			var cardImage = document.createElement('img');
 			var cardName = document.createElement('h3');
 			var milesAway = document.createElement('p');
-			var saveButton = document.createElement('button');
+			var addToRouteButton = document.createElement('button');
 
 			if (result.mainPhotoUrl) {
 				cardImage.setAttribute('src', result.mainPhotoUrl);
@@ -440,14 +456,32 @@ var ResultView = function() {
 
 			cardName.innerHTML = result.name;
 			milesAway.innerHTML = result.formatted_address;
-			saveButton.setAttribute('class', 'btn btn-primary');
-			saveButton.innerHTML = 'Add to route';
+			addToRouteButton.setAttribute('class', 'btn btn-add');
+			addToRouteButton.innerHTML = Strings.ADD_TO_ROUTE_TEXT;
+
+			addToRouteButton.addEventListener('click', function() {
+				var [placeControl,routeControl,saveControl] = document.getElementsByClassName('nav navbar-nav')[0].children;
+
+				if (addToRouteButton.className === 'btn btn-add') {
+					addToRouteButton.className = 'btn btn-remove'
+					addToRouteButton.innerHTML = Strings.REMOVE_FROM_ROUTE_TEXT;
+					RouteController.addToRoute(result.id);
+				} else {
+					addToRouteButton.className = 'btn btn-add'
+					addToRouteButton.innerHTML = Strings.ADD_TO_ROUTE_TEXT;
+					RouteController.removeFromRoute(result.id);					
+				}
+
+				routeControl.className = (Globals.route.length > 0) ? '' : 'disabled';
+				routeControl.firstChild.innerHTML = (Globals.route.length > 0) ? Strings.ROUTES_BUTTON_TEXT + ' (' + Globals.route.length + ')' : Strings.ROUTES_BUTTON_TEXT;
+				saveControl.className = (Globals.route.length > 0) ? '' : 'disabled';
+			});
 
 			cardInfo.setAttribute('class', 'card-info');
 			cardInfo.appendChild(cardImageContainer); 
 			cardInfo.appendChild(cardName); 
 			cardInfo.appendChild(milesAway); 
-			cardInfo.appendChild(saveButton); 
+			cardInfo.appendChild(addToRouteButton); 
 
 			cardContainer.setAttribute('class', 'card-container');
 			cardContainer.appendChild(cardInfo);
@@ -455,7 +489,7 @@ var ResultView = function() {
 			fragment.appendChild(cardContainer);
 		},
 
-		resultsAsRoutes: function(fragment) {
+		resultsAsRoute: function(fragment) {
 			var table = document.createElement('table');
 			table.setAttribute('class', 'table table-hover table-responsive');
 			
@@ -496,11 +530,9 @@ var ResultMenuView = function() {
 	return {
 		resultMenuAsInline: function(fragment, result) {
 			var navbar = document.createElement('nav');
-			var navbarContainer = document.createElement('div');
 			var navbarList = document.createElement('ul');
 
 			navbar.setAttribute('class', 'navbar navbar-default');
-			navbarContainer.setAttribute('class', 'container-fluid');
 			navbarList.setAttribute('class', 'nav navbar-nav');
 
 			var menuItems = [placesButtonText,routesButtonText,saveButtonText];
@@ -511,7 +543,7 @@ var ResultMenuView = function() {
 				if (index === 0) {
 					navBarListItem.setAttribute('class', 'active');
 				} else {
-					// navBarListItem.setAttribute('class', 'disabled');
+					navBarListItem.setAttribute('class', 'disabled');
 				}
 				navBarListItemLink.innerHTML = result;
 
@@ -523,8 +555,19 @@ var ResultMenuView = function() {
 								e.target.parentElement.parentElement.children[i].className = '';
 							}
 						}
-
 						e.target.parentElement.className = 'active';
+					}
+
+					if (e.target.parentElement.className !== 'disabled') {
+						if (result === placesButtonText) {
+							console.log('places');
+						}else if (result === routesButtonText) {
+							console.log('routes');
+							// render resultsAsRoute
+						} else {
+							console.log('save')
+							// Create entry in database with route_id | [route]
+						}
 					}
 				});
 
@@ -532,8 +575,7 @@ var ResultMenuView = function() {
 				navbarList.appendChild(navBarListItem);
 			});
 
-			navbarContainer.appendChild(navbarList);
-			navbar.appendChild(navbarContainer);
+			navbar.appendChild(navbarList);
 			fragment.appendChild(navbar);
 		}
 	}
@@ -561,7 +603,7 @@ module.exports = {
 	ResultMenuView,
 	FullScreenView
 }
-},{"./../_variables/strings":13,"./../domevents":18}],15:[function(require,module,exports){
+},{"./../_controllers/routecontroller":10,"./../_variables/strings":14,"./../domevents":19}],16:[function(require,module,exports){
 var Strings = require('./../_variables/strings');
 var Globals = require('./../_variables/globals');
 
@@ -594,7 +636,7 @@ module.exports = {
 }
 
 
-},{"./../_variables/globals":12,"./../_variables/strings":13}],16:[function(require,module,exports){
+},{"./../_variables/globals":13,"./../_variables/strings":14}],17:[function(require,module,exports){
 ApiConnection = function() {
 	return {
 		connect: function(url, callbackName, globalFunction) {
@@ -611,7 +653,7 @@ ApiConnection = function() {
 }();
 
 module.exports = ApiConnection;
-},{}],17:[function(require,module,exports){
+},{}],18:[function(require,module,exports){
 var Globals = require('./_variables/globals');
 var Constants = require('./_variables/constants');
 
@@ -670,7 +712,7 @@ CacheUtility = function() {
 }();
 
 module.exports = CacheUtility;
-},{"./_variables/constants":11,"./_variables/globals":12}],18:[function(require,module,exports){
+},{"./_variables/constants":12,"./_variables/globals":13}],19:[function(require,module,exports){
 var CacheUtility = require('./cacheutility');
 var MapController = require('./_controllers/mapcontroller');
 var MapView = require('./_views/mapview');
@@ -769,7 +811,7 @@ SearchEvents = function() {
 module.exports = {
 	SearchEvents
 };
-},{"./_classes/zenplace":4,"./_controllers/geocodecontroller":6,"./_controllers/mapcontroller":7,"./_controllers/placedetailscontroller":8,"./_controllers/placescontroller":9,"./_utility/apputility":10,"./_variables/constants":11,"./_variables/globals":12,"./_views/mapview":15,"./cacheutility":17}],19:[function(require,module,exports){
+},{"./_classes/zenplace":4,"./_controllers/geocodecontroller":6,"./_controllers/mapcontroller":7,"./_controllers/placedetailscontroller":8,"./_controllers/placescontroller":9,"./_utility/apputility":11,"./_variables/constants":12,"./_variables/globals":13,"./_views/mapview":16,"./cacheutility":18}],20:[function(require,module,exports){
 'use strict';
 var ApiConnection = require('./apiconnection');
 var Globals = require('./_variables/globals.js');
@@ -830,4 +872,4 @@ function initComponents() {
 	map.mapTypes.set('map_style', styledMap);
 	map.setMapTypeId('map_style');
 };
-},{"./_controllers/fragmentcontroller.js":5,"./_variables/constants":11,"./_variables/globals.js":12,"./_variables/strings":13,"./apiconnection":16,"./domevents":18}]},{},[19]);
+},{"./_controllers/fragmentcontroller.js":5,"./_variables/constants":12,"./_variables/globals.js":13,"./_variables/strings":14,"./apiconnection":17,"./domevents":19}]},{},[20]);
