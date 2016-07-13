@@ -7,75 +7,95 @@ var SearchView = function(){
 
 	return {
 		searchAsDefault: function(fragment) {
-			var input_group = document.createElement('div');
-			var input_group_addon = document.createElement('span');
+			var inputContainer = document.createElement('div');
+			var inputContainerAddon = document.createElement('span');
 			var glyphicon = document.createElement('i');
-			var search_input = document.createElement('input');
+			var searchInput = document.createElement('input');
 
-			input_group.setAttribute('class', 'input-group input-group-lg');
-			input_group_addon.setAttribute('class', 'input-group-addon');
+			inputContainer.setAttribute('class', 'input-group input-group-lg');
+			inputContainerAddon.setAttribute('class', 'input-group-addon');
 			glyphicon.setAttribute('class', 'glyphicon glyphicon-search');
-			search_input.setAttribute('type', 'text');
-			search_input.setAttribute('class', 'form-control');
-			search_input.setAttribute('id', 'search-input');
-			search_input.setAttribute('placeholder', Strings.SEARCH_PLACEHOLDER_TEXT);
-			search_input.setAttribute('autofocus', true);
+			searchInput.setAttribute('type', 'text');
+			searchInput.setAttribute('class', 'form-control');
+			searchInput.setAttribute('id', 'search-input');
+			searchInput.setAttribute('placeholder', Strings.SEARCH_PLACEHOLDER_TEXT);
+			searchInput.setAttribute('autofocus', true);
 
-			input_group.appendChild(input_group_addon);
-			input_group_addon.appendChild(glyphicon);
-			input_group.appendChild(search_input);
+			inputContainer.appendChild(inputContainerAddon);
+			inputContainerAddon.appendChild(glyphicon);
+			inputContainer.appendChild(searchInput);
 
-			fragment.appendChild(input_group);
+			fragment.appendChild(inputContainer);
 		},
 
 		searchAsInline: function(fragment) {
-			var search_input = document.createElement('input');
-			var search_button = document.createElement('button');
-			var search_settings_button = document.createElement('button');
+			var searchInput = document.createElement('input');
+			var searchButton = document.createElement('button');
+			var searchSettingsButton = document.createElement('button');
 
-			search_input.setAttribute('id', 'search-input');
-			search_input.addEventListener('keyup', function(event) {
+			searchInput.setAttribute('id', 'search-input');
+			searchInput.addEventListener('keyup', function(event) {
 				DomEvents.SearchEvents.onSearchSubmit(event);
 			});
 
-			search_button.setAttribute('id', 'search-button');
-			search_button.innerHTML = goButtonText;
-			search_button.addEventListener('click', function() {
+			searchButton.setAttribute('id', 'search-button');
+			searchButton.innerHTML = goButtonText;
+			searchButton.addEventListener('click', function() {
 				DomEvents.SearchEvents.searchForPlaces();
 			});
 
-			search_settings_button.setAttribute('id','search-settings');
-			search_settings_button.innerHTML = settingsButtonText;
+			searchSettingsButton.setAttribute('id','search-settings');
+			searchSettingsButton.innerHTML = settingsButtonText;
 
-			fragment.appendChild(search_input);
-			fragment.appendChild(search_button);
-			fragment.appendChild(search_settings_button);
+			fragment.appendChild(searchInput);
+			fragment.appendChild(searchButton);
+			fragment.appendChild(searchSettingsButton);
 		}
 	}
 };
 
 var ResultView = function() {
 	return {
-		resultsAsCard: function(fragment, result) {
-			var place_card = document.createElement('div');
-			var place_info = document.createElement('div');
-			var place_name = document.createElement('h1');
-			var miles_away = document.createElement('p');
-			var save_button = document.createElement('button');
+		resultsAsPlaces: function(fragment, result) {
+			var cardContainer = document.createElement('div');
+			var cardInfo = document.createElement('div');
+			var cardImageContainer = document.createElement('div');
+			var cardImage = document.createElement('img');
+			var cardName = document.createElement('h3');
+			var milesAway = document.createElement('p');
+			var saveButton = document.createElement('button');
 
-			place_name.innerHTML = result.name;
-			miles_away.innerHTML = result.formatted_address;
-			save_button.innerHTML = 'Save';
+			if (result.mainPhotoUrl) {
+				cardImage.setAttribute('src', result.mainPhotoUrl);
+			} else {
+				var location = result.geometry.location.lat + "," + result.geometry.location.lng;
+				console.log(location);
+				cardImage.setAttribute('src', 'https://maps.googleapis.com/maps/api/streetview?size=600x300&location=' + location + '&heading=200&&fov=100&pitch=20&key=AIzaSyBgESRsFdB2XZSZtPhiVnKWzG0JeR-nGGM');
+			}
 
-			place_info.appendChild(place_name); 
-			place_info.appendChild(miles_away); 
-			place_info.appendChild(save_button); 
-			place_card.appendChild(place_info);
+			cardImage.setAttribute('alt', 'A photo of ' + result.name);
 
-			fragment.appendChild(place_card);
+			cardImageContainer.setAttribute('class', 'cardImageContainer');
+			cardImageContainer.appendChild(cardImage);
+
+			cardName.innerHTML = result.name;
+			milesAway.innerHTML = result.formatted_address;
+			saveButton.setAttribute('class', 'btn btn-primary');
+			saveButton.innerHTML = 'Add to route';
+
+			cardInfo.setAttribute('class', 'card-info');
+			cardInfo.appendChild(cardImageContainer); 
+			cardInfo.appendChild(cardName); 
+			cardInfo.appendChild(milesAway); 
+			cardInfo.appendChild(saveButton); 
+
+			cardContainer.setAttribute('class', 'card-container');
+			cardContainer.appendChild(cardInfo);
+
+			fragment.appendChild(cardContainer);
 		},
 
-		resultsAsTableItem: function(fragment) {
+		resultsAsRoutes: function(fragment) {
 			var table = document.createElement('table');
 			table.setAttribute('class', 'table table-hover table-responsive');
 			
@@ -108,6 +128,57 @@ var ResultView = function() {
 	}
 };
 
+var ResultMenuView = function() {
+	var placesButtonText = Strings.PLACES_BUTTON_TEXT;
+	var routesButtonText = Strings.ROUTES_BUTTON_TEXT;
+	var saveButtonText = Strings.SAVE_BUTTON_TEXT;
+
+	return {
+		resultMenuAsInline: function(fragment, result) {
+			var navbar = document.createElement('nav');
+			var navbarContainer = document.createElement('div');
+			var navbarList = document.createElement('ul');
+
+			navbar.setAttribute('class', 'navbar navbar-default');
+			navbarContainer.setAttribute('class', 'container-fluid');
+			navbarList.setAttribute('class', 'nav navbar-nav');
+
+			var menuItems = [placesButtonText,routesButtonText,saveButtonText];
+
+			menuItems.forEach(function(result, index) {
+				var navBarListItem = document.createElement('li');
+				var navBarListItemLink = document.createElement('a');
+				if (index === 0) {
+					navBarListItem.setAttribute('class', 'active');
+				} else {
+					// navBarListItem.setAttribute('class', 'disabled');
+				}
+				navBarListItemLink.innerHTML = result;
+
+				navBarListItemLink.addEventListener('click', function(e){
+					if (e.target.parentElement.className !== 'disabled' && e.target.parentElement.className !== 'active') {
+						var listLength = e.target.parentElement.parentElement.children.length;
+						for (var i=0; i < listLength; i++) {
+							if (e.target.parentElement.parentElement.children[i].className === 'active') {
+								e.target.parentElement.parentElement.children[i].className = '';
+							}
+						}
+
+						e.target.parentElement.className = 'active';
+					}
+				});
+
+				navBarListItem.appendChild(navBarListItemLink);
+				navbarList.appendChild(navBarListItem);
+			});
+
+			navbarContainer.appendChild(navbarList);
+			navbar.appendChild(navbarContainer);
+			fragment.appendChild(navbar);
+		}
+	}
+};
+
 var FullScreenView = function() {
 	var loadingMessage = Strings.LOADING_RESULTS;
 	return {
@@ -127,5 +198,6 @@ var FullScreenView = function() {
 module.exports = {
 	SearchView,
 	ResultView,
+	ResultMenuView,
 	FullScreenView
 }

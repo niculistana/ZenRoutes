@@ -7,7 +7,8 @@ PlacesService = function() {
 			var request = {
 				location: origin,
 				radius: 12000,
-				keyword: 'tourist attraction'
+				keyword: 'tourist attraction',
+				type: 'point_of_interest'
 			};
 
 			var service = new google.maps.places.PlacesService(map);
@@ -15,7 +16,7 @@ PlacesService = function() {
 				if (status === google.maps.places.PlacesServiceStatus.OK) {
 					callback(results);
 				} else {
-					console.log('nearbySearch was not successful due to the following: ' + status);
+					alert('nearbySearch was not successful due to the following: ' + status);
 				}
 			});
 		}

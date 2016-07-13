@@ -14,8 +14,16 @@ FragmentController = function() {
 		},
 
 		composeResultFragment: function (fragment, result, view) {
-			if (view === Constants.DEFAULT) {
-				FragmentView.ResultView().resultsAsCard(fragment, result);
+			if (view === Constants.PLACES) {
+				FragmentView.ResultView().resultsAsPlaces(fragment, result);
+			} else if (view === Constants.ROUTES) {
+				FragmentView.ResultView().resultsAsRoutes(fragment, result);
+			}
+		},
+
+		composeResultMenuFragment: function (fragment, view) {
+			if (view === Constants.INLINE) {
+				FragmentView.ResultMenuView().resultMenuAsInline(fragment);
 			}
 		},
 

@@ -11,7 +11,7 @@ GeocodeService = function() {
 				if (status === google.maps.GeocoderStatus.OK && results[0].geometry) {
 					callback(results[0]);
 				} else {
-					console.log('Geocoder service was not successful due to the following: ' + status);
+					alert('Geocoder service was not successful due to the following: ' + status);
 				}
 			});
 		}
@@ -30,7 +30,7 @@ PlaceDetailsService = function() {
 				if (status === google.maps.places.PlacesServiceStatus.OK) {
 					callback(result);
 				} else {
-					console.log('getDetails was not successful due to the following: ' + status);
+					alert('getDetails was not successful due to the following: ' + status);
 				}
 			});
 		}
@@ -48,7 +48,8 @@ PlacesService = function() {
 			var request = {
 				location: origin,
 				radius: 12000,
-				keyword: 'tourist attraction'
+				keyword: 'tourist attraction',
+				type: 'point_of_interest'
 			};
 
 			var service = new google.maps.places.PlacesService(map);
@@ -56,7 +57,7 @@ PlacesService = function() {
 				if (status === google.maps.places.PlacesServiceStatus.OK) {
 					callback(results);
 				} else {
-					console.log('nearbySearch was not successful due to the following: ' + status);
+					alert('nearbySearch was not successful due to the following: ' + status);
 				}
 			});
 		}
@@ -106,8 +107,16 @@ FragmentController = function() {
 		},
 
 		composeResultFragment: function (fragment, result, view) {
-			if (view === Constants.DEFAULT) {
-				FragmentView.ResultView().resultsAsCard(fragment, result);
+			if (view === Constants.PLACES) {
+				FragmentView.ResultView().resultsAsPlaces(fragment, result);
+			} else if (view === Constants.ROUTES) {
+				FragmentView.ResultView().resultsAsRoutes(fragment, result);
+			}
+		},
+
+		composeResultMenuFragment: function (fragment, view) {
+			if (view === Constants.INLINE) {
+				FragmentView.ResultMenuView().resultMenuAsInline(fragment);
 			}
 		},
 
@@ -130,16 +139,11 @@ var GeocodeService = require('../_apiservices/geocodeservice');
 GeocodeController = function() {
 	return{
 		getGeocodeResult: function(query, callback) {
-			if (Globals.geocodeCache[query]) {
-				var coordinates = Globals.geocodeCache[query];
+			GeocodeService.getGeocodeFromQuery(query, function(result){
+				var coordinates = [result.geometry.location.lat(), result.geometry.location.lng()].toString();
+				CacheUtility.storeGeocodeCoordinates(query, coordinates);
 				callback(coordinates);
-			} else {
-				GeocodeService.getGeocodeFromQuery(query, function(result){
-					var coordinates = [result.geometry.location.lat(), result.geometry.location.lng()].toString();
-					CacheUtility.storeGeocodeResult(query,coordinates);
-					callback(coordinates);
-				});
-			}
+			});
 		}
 	}
 }();
@@ -196,34 +200,27 @@ var ZenPlace = require('../_classes/zenplace');
 PlaceDetailsController = function() {
 	return{
 		getPlaceDetailsResult: function(placeId, callback) {
-			if (Globals.zenPlaceCache[placeId]) {
-				var zenPlaceKey = Globals.zenPlaceCache[placeId];
-				var zenPlaceDetails = Globals.zenPlaceDetailsCache[zenPlaceKey];
-				callback(zenPlaceDetails);
-			} else {
-				PlaceDetailsService.getPlaceDetailsFromPlaceId(placeId, function(result) {
+			PlaceDetailsService.getPlaceDetailsFromPlaceId(placeId, function(result) {
 				var zenPlaceId = AppUtility.generateZenPlaceId();
-					while (Globals.zenPlaceDetailsCache[zenPlaceId]) {
-						zenPlaceId = AppUtility.generateZenPlaceId();
+				while (Globals.zenPlaceDetailsCache[zenPlaceId]) {
+					zenPlaceId = AppUtility.generateZenPlaceId();
+				}
+
+				var zenPlaceDetails = new ZenPlace(zenPlaceId);
+
+				Object.keys(result).map(function(key, index) {
+					if (typeof zenPlaceDetails[key] !== 'undefined' && key != 'id' && result.hasOwnProperty(key)) {
+						zenPlaceDetails[key] = result[key];   
 					}
-
-					var zenPlaceDetails = new ZenPlace(zenPlaceId);
-
-					Object.keys(result).map(function(key, index) {
-						if (typeof zenPlaceDetails[key] !== 'undefined' && key != 'id' && result.hasOwnProperty(key)) {
-							zenPlaceDetails[key] = result[key];   
-						}
-					});
-
-					if (result.photos) {
-						zenPlaceDetails.mainPhotoUrl = result.photos[0].getUrl({'maxWidth': 500, 'maxHeight': 500});
-					}
-					
-					CacheUtility.storeZenPlaceResult(placeId,zenPlaceId);
-					CacheUtility.storeZenPlaceDetailsResult(zenPlaceId,zenPlaceDetails);
-					callback(zenPlaceDetails);
 				});
-			}
+				
+				if (result.photos) {
+					zenPlaceDetails.mainPhotoUrl = result.photos[0].getUrl({'maxWidth': 500, 'maxHeight': 500});
+				}
+
+				CacheUtility.storeZenPlaceDetailsResult(zenPlaceId,zenPlaceDetails);
+				callback(zenPlaceDetails);
+			});
 		}
 	}
 }();
@@ -237,16 +234,10 @@ var PlacesService = require('../_apiservices/placesservice');
 PlacesController = function() {
 	return{
 		getPlacesResult: function(coordinates, callback) {
-			if (Globals.placesCache[coordinates]) {
-				var places = Globals.placesCache[coordinates];
+			PlacesService.getPlacesFromCoordinates(coordinates, function(result) {
+				var places = result;
 				callback(places);
-			} else {
-				PlacesService.getPlacesFromCoordinates(coordinates, function(result) {
-					var places = result;
-					CacheUtility.storePlacesResult(coordinates,places);
-					callback(places);
-				});
-			}
+			});
 		}
 	}
 }();
@@ -296,7 +287,8 @@ module.exports = AppUtility;
 const INLINE = 'inline';
 const DEFAULT = 'default';
 
-const TABLE = 'table';
+const PLACES = 'places';
+const ROUTES = 'routes';
 
 const DELAY = 'delay';
 const DIM = 'dim';
@@ -306,18 +298,21 @@ const GEOCODE_CACHE_KEY = 'geocodeCache';
 const PLACES_CACHE_KEY = 'placesCache';
 const ZEN_PLACE_CACHE_KEY = 'zenPlaceCache';
 const ZEN_PLACE_DETAILS_CACHE_KEY = 'zenPlaceDetailsCache';
+const ZEN_PLACES_RESULT_CACHE_KEY = 'zenPlacesResultCache';
 
 module.exports = {
 	INLINE,
 	DEFAULT,
-	TABLE,
+	PLACES,
+	ROUTES,
 	DELAY,
 	DIM,
 	QUERY_CACHE_KEY,
 	GEOCODE_CACHE_KEY,
 	PLACES_CACHE_KEY,
 	ZEN_PLACE_CACHE_KEY,
-	ZEN_PLACE_DETAILS_CACHE_KEY
+	ZEN_PLACE_DETAILS_CACHE_KEY,
+	ZEN_PLACES_RESULT_CACHE_KEY
 };
 },{}],12:[function(require,module,exports){
 var Constants = require('./constants');
@@ -330,11 +325,13 @@ Globals = function () {
 		results: [],
 		resultsCart:[],
 		markers:[],
+		zenPlacesResult:[],
 		queryCache: (localStorage.getItem(Constants.QUERY_CACHE_KEY)) ? JSON.parse(localStorage.getItem(Constants.QUERY_CACHE_KEY)) : [],
 		geocodeCache: (localStorage.getItem(Constants.GEOCODE_CACHE_KEY)) ? JSON.parse(localStorage.getItem(Constants.GEOCODE_CACHE_KEY)) : {},
-		placesCache: (localStorage.getItem(Constants.PLACES_CACHE_KEY)) ? JSON.parse(localStorage.getItem(Constants.PLACES_CACHE_KEY)) : {},
-		zenPlaceCache: (localStorage.getItem(Constants.ZEN_PLACE_CACHE_KEY)) ? JSON.parse(localStorage.getItem(Constants.ZEN_PLACE_CACHE_KEY)) : {},
-		zenPlaceDetailsCache: (localStorage.getItem(Constants.ZEN_PLACE_DETAILS_CACHE_KEY)) ? JSON.parse(localStorage.getItem(Constants.ZEN_PLACE_DETAILS_CACHE_KEY)) : {}
+		// placesCache: (localStorage.getItem(Constants.PLACES_CACHE_KEY)) ? JSON.parse(localStorage.getItem(Constants.PLACES_CACHE_KEY)) : {},
+		// zenPlaceCache: (localStorage.getItem(Constants.ZEN_PLACE_CACHE_KEY)) ? JSON.parse(localStorage.getItem(Constants.ZEN_PLACE_CACHE_KEY)) : {},
+		zenPlaceDetailsCache: (localStorage.getItem(Constants.ZEN_PLACE_DETAILS_CACHE_KEY)) ? JSON.parse(localStorage.getItem(Constants.ZEN_PLACE_DETAILS_CACHE_KEY)) : {},
+		zenPlacesResultCache: (localStorage.getItem(Constants.ZEN_PLACES_RESULT_CACHE_KEY)) ? JSON.parse(localStorage.getItem(Constants.ZEN_PLACES_RESULT_CACHE_KEY)) : {}
 	};
 }();
 
@@ -345,6 +342,9 @@ const SEARCH_PLACEHOLDER_TEXT = 'Which city are you visiting?'
 const LOADING_RESULTS = 'Hang on for a sec while we gather places to go to...';
 
 const GO_BUTTON_TEXT = 'GO';
+const PLACES_BUTTON_TEXT = 'PLACES';
+const ROUTES_BUTTON_TEXT = 'MY ROUTE';
+const SAVE_BUTTON_TEXT = 'SAVE';
 const SETTINGS_BUTTON_TEXT = 'SETTINGS';
 
 
@@ -352,6 +352,9 @@ module.exports = {
 	SEARCH_PLACEHOLDER_TEXT,
 	LOADING_RESULTS,
 	GO_BUTTON_TEXT,
+	PLACES_BUTTON_TEXT,
+	ROUTES_BUTTON_TEXT,
+	SAVE_BUTTON_TEXT,
 	SETTINGS_BUTTON_TEXT
 };
 },{}],14:[function(require,module,exports){
@@ -364,75 +367,95 @@ var SearchView = function(){
 
 	return {
 		searchAsDefault: function(fragment) {
-			var input_group = document.createElement('div');
-			var input_group_addon = document.createElement('span');
+			var inputContainer = document.createElement('div');
+			var inputContainerAddon = document.createElement('span');
 			var glyphicon = document.createElement('i');
-			var search_input = document.createElement('input');
+			var searchInput = document.createElement('input');
 
-			input_group.setAttribute('class', 'input-group input-group-lg');
-			input_group_addon.setAttribute('class', 'input-group-addon');
+			inputContainer.setAttribute('class', 'input-group input-group-lg');
+			inputContainerAddon.setAttribute('class', 'input-group-addon');
 			glyphicon.setAttribute('class', 'glyphicon glyphicon-search');
-			search_input.setAttribute('type', 'text');
-			search_input.setAttribute('class', 'form-control');
-			search_input.setAttribute('id', 'search-input');
-			search_input.setAttribute('placeholder', Strings.SEARCH_PLACEHOLDER_TEXT);
-			search_input.setAttribute('autofocus', true);
+			searchInput.setAttribute('type', 'text');
+			searchInput.setAttribute('class', 'form-control');
+			searchInput.setAttribute('id', 'search-input');
+			searchInput.setAttribute('placeholder', Strings.SEARCH_PLACEHOLDER_TEXT);
+			searchInput.setAttribute('autofocus', true);
 
-			input_group.appendChild(input_group_addon);
-			input_group_addon.appendChild(glyphicon);
-			input_group.appendChild(search_input);
+			inputContainer.appendChild(inputContainerAddon);
+			inputContainerAddon.appendChild(glyphicon);
+			inputContainer.appendChild(searchInput);
 
-			fragment.appendChild(input_group);
+			fragment.appendChild(inputContainer);
 		},
 
 		searchAsInline: function(fragment) {
-			var search_input = document.createElement('input');
-			var search_button = document.createElement('button');
-			var search_settings_button = document.createElement('button');
+			var searchInput = document.createElement('input');
+			var searchButton = document.createElement('button');
+			var searchSettingsButton = document.createElement('button');
 
-			search_input.setAttribute('id', 'search-input');
-			search_input.addEventListener('keyup', function(event) {
+			searchInput.setAttribute('id', 'search-input');
+			searchInput.addEventListener('keyup', function(event) {
 				DomEvents.SearchEvents.onSearchSubmit(event);
 			});
 
-			search_button.setAttribute('id', 'search-button');
-			search_button.innerHTML = goButtonText;
-			search_button.addEventListener('click', function() {
+			searchButton.setAttribute('id', 'search-button');
+			searchButton.innerHTML = goButtonText;
+			searchButton.addEventListener('click', function() {
 				DomEvents.SearchEvents.searchForPlaces();
 			});
 
-			search_settings_button.setAttribute('id','search-settings');
-			search_settings_button.innerHTML = settingsButtonText;
+			searchSettingsButton.setAttribute('id','search-settings');
+			searchSettingsButton.innerHTML = settingsButtonText;
 
-			fragment.appendChild(search_input);
-			fragment.appendChild(search_button);
-			fragment.appendChild(search_settings_button);
+			fragment.appendChild(searchInput);
+			fragment.appendChild(searchButton);
+			fragment.appendChild(searchSettingsButton);
 		}
 	}
 };
 
 var ResultView = function() {
 	return {
-		resultsAsCard: function(fragment, result) {
-			var place_card = document.createElement('div');
-			var place_info = document.createElement('div');
-			var place_name = document.createElement('h1');
-			var miles_away = document.createElement('p');
-			var save_button = document.createElement('button');
+		resultsAsPlaces: function(fragment, result) {
+			var cardContainer = document.createElement('div');
+			var cardInfo = document.createElement('div');
+			var cardImageContainer = document.createElement('div');
+			var cardImage = document.createElement('img');
+			var cardName = document.createElement('h3');
+			var milesAway = document.createElement('p');
+			var saveButton = document.createElement('button');
 
-			place_name.innerHTML = result.name;
-			miles_away.innerHTML = result.formatted_address;
-			save_button.innerHTML = 'Save';
+			if (result.mainPhotoUrl) {
+				cardImage.setAttribute('src', result.mainPhotoUrl);
+			} else {
+				var location = result.geometry.location.lat + "," + result.geometry.location.lng;
+				console.log(location);
+				cardImage.setAttribute('src', 'https://maps.googleapis.com/maps/api/streetview?size=600x300&location=' + location + '&heading=200&&fov=100&pitch=20&key=AIzaSyBgESRsFdB2XZSZtPhiVnKWzG0JeR-nGGM');
+			}
 
-			place_info.appendChild(place_name); 
-			place_info.appendChild(miles_away); 
-			place_info.appendChild(save_button); 
-			place_card.appendChild(place_info);
+			cardImage.setAttribute('alt', 'A photo of ' + result.name);
 
-			fragment.appendChild(place_card);
+			cardImageContainer.setAttribute('class', 'cardImageContainer');
+			cardImageContainer.appendChild(cardImage);
+
+			cardName.innerHTML = result.name;
+			milesAway.innerHTML = result.formatted_address;
+			saveButton.setAttribute('class', 'btn btn-primary');
+			saveButton.innerHTML = 'Add to route';
+
+			cardInfo.setAttribute('class', 'card-info');
+			cardInfo.appendChild(cardImageContainer); 
+			cardInfo.appendChild(cardName); 
+			cardInfo.appendChild(milesAway); 
+			cardInfo.appendChild(saveButton); 
+
+			cardContainer.setAttribute('class', 'card-container');
+			cardContainer.appendChild(cardInfo);
+
+			fragment.appendChild(cardContainer);
 		},
 
-		resultsAsTableItem: function(fragment) {
+		resultsAsRoutes: function(fragment) {
 			var table = document.createElement('table');
 			table.setAttribute('class', 'table table-hover table-responsive');
 			
@@ -465,6 +488,57 @@ var ResultView = function() {
 	}
 };
 
+var ResultMenuView = function() {
+	var placesButtonText = Strings.PLACES_BUTTON_TEXT;
+	var routesButtonText = Strings.ROUTES_BUTTON_TEXT;
+	var saveButtonText = Strings.SAVE_BUTTON_TEXT;
+
+	return {
+		resultMenuAsInline: function(fragment, result) {
+			var navbar = document.createElement('nav');
+			var navbarContainer = document.createElement('div');
+			var navbarList = document.createElement('ul');
+
+			navbar.setAttribute('class', 'navbar navbar-default');
+			navbarContainer.setAttribute('class', 'container-fluid');
+			navbarList.setAttribute('class', 'nav navbar-nav');
+
+			var menuItems = [placesButtonText,routesButtonText,saveButtonText];
+
+			menuItems.forEach(function(result, index) {
+				var navBarListItem = document.createElement('li');
+				var navBarListItemLink = document.createElement('a');
+				if (index === 0) {
+					navBarListItem.setAttribute('class', 'active');
+				} else {
+					// navBarListItem.setAttribute('class', 'disabled');
+				}
+				navBarListItemLink.innerHTML = result;
+
+				navBarListItemLink.addEventListener('click', function(e){
+					if (e.target.parentElement.className !== 'disabled' && e.target.parentElement.className !== 'active') {
+						var listLength = e.target.parentElement.parentElement.children.length;
+						for (var i=0; i < listLength; i++) {
+							if (e.target.parentElement.parentElement.children[i].className === 'active') {
+								e.target.parentElement.parentElement.children[i].className = '';
+							}
+						}
+
+						e.target.parentElement.className = 'active';
+					}
+				});
+
+				navBarListItem.appendChild(navBarListItemLink);
+				navbarList.appendChild(navBarListItem);
+			});
+
+			navbarContainer.appendChild(navbarList);
+			navbar.appendChild(navbarContainer);
+			fragment.appendChild(navbar);
+		}
+	}
+};
+
 var FullScreenView = function() {
 	var loadingMessage = Strings.LOADING_RESULTS;
 	return {
@@ -484,6 +558,7 @@ var FullScreenView = function() {
 module.exports = {
 	SearchView,
 	ResultView,
+	ResultMenuView,
 	FullScreenView
 }
 },{"./../_variables/strings":13,"./../domevents":18}],15:[function(require,module,exports){
@@ -546,6 +621,7 @@ CacheUtility = function() {
 	var placesCacheKey = Constants.PLACES_CACHE_KEY;
 	var zenPlaceCacheKey = Constants.ZEN_PLACE_CACHE_KEY;
 	var zenPlaceDetailsCacheKey = Constants.ZEN_PLACE_DETAILS_CACHE_KEY;
+	var zenPlacesResultCacheKey = Constants.ZEN_PLACES_RESULT_CACHE_KEY;
 
 	return {
 		storeQuery: function(query) {
@@ -555,8 +631,8 @@ CacheUtility = function() {
 		clearQueryCache: function() {
 			localStorage[queryCacheKey] = '';
 		},
-		storeGeocodeResult: function(query, result) {
-			Globals.geocodeCache[query] = result;
+		storeGeocodeCoordinates: function(query, coordinates) {
+			Globals.geocodeCache[query] = coordinates;
 			localStorage.setItem(geocodeCacheKey, JSON.stringify(Globals.geocodeCache));
 		},
 		clearGeocodeCache: function() {
@@ -582,6 +658,13 @@ CacheUtility = function() {
 		},
 		clearZenPlaceDetailsCache: function() {
 			localStorage[zenPlaceDetailsCacheKey] = '';
+		},
+		storeZenPlacesResult: function(query, result) {
+			Globals.zenPlacesResultCache[query] = result;
+			localStorage.setItem(zenPlacesResultCacheKey, JSON.stringify(Globals.zenPlacesResultCache));
+		},
+		clearZenPlacesResultCache: function() {
+			localStorage[zenPlacesResultCacheKey] = '';
 		}	
 	}
 }();
@@ -612,104 +695,73 @@ SearchEvents = function() {
 			var searchInput = document.getElementById('search-input');
 			var query = searchInput.value;
 
+			var body = document.getElementsByTagName("body")[0];
+			var fullScreenFragment = document.createDocumentFragment();
+			var resultsContainer = document.getElementById('results');
+
 			if (query.length > 0) {
 				CacheUtility.storeQuery(query);
-
 				MapView.MarkerView().clearAllMarkers();
+				resultsContainer.innerHTML = '';
 
-				GeocodeController.getGeocodeResult(query, function(coordinates){
-					var [x, y] = coordinates.split(',').map(parseFloat);
-
+				if (Globals.geocodeCache[query] && Globals.zenPlacesResultCache[query]) {
+					var [x, y] = Globals.geocodeCache[query].split(',').map(parseFloat);
 					var origin = {lat: x, lng: y};
-
 					MapController.composeOriginMarker(origin);
 
-					PlacesController.getPlacesResult(coordinates, function(places){
+					Globals.zenPlacesResultCache[query].forEach(function(result, index){
+						var placeDetails = Globals.zenPlaceDetailsCache[result];
+						MapController.composeResultMarker(placeDetails);
+						var resultFragment = document.createDocumentFragment();
+						FragmentController.composeResultFragment(resultFragment, placeDetails, Constants.PLACES);
+						resultsContainer.appendChild(resultFragment);
+					});
+					
+					body.style.backgroundPosition = "-500px";
+				} else {
+					GeocodeController.getGeocodeResult(query, function(coordinates){
+						var [x, y] = coordinates.split(',').map(parseFloat);
+						var origin = {lat: x, lng: y};
 
-						var body = document.getElementsByTagName("body")[0];
-						var fullScreenFragment = document.createDocumentFragment();
-						var resultsContainer = document.getElementById('results');
+						MapController.composeOriginMarker(origin);
 
-						FragmentController.composeFullScreenFragment(fullScreenFragment, Constants.DELAY);
-						body.insertBefore(fullScreenFragment, body.firstChild);
+						PlacesController.getPlacesResult(coordinates, function(places){
+							FragmentController.composeFullScreenFragment(fullScreenFragment, Constants.DELAY);
+							body.insertBefore(fullScreenFragment, body.firstChild);
 
-						resultsContainer.innerHTML = '';
+							places.forEach(function(result, index){
+								(function(index){
+									setTimeout(function(){
+										var placeId = result.place_id;
 
-						places.forEach(function(result, index){
-							(function(index){
-								setTimeout(function(){
-									var placeId = result.place_id;
+										PlaceDetailsController.getPlaceDetailsResult(placeId, function(placeDetails){
+											MapController.composeResultMarker(placeDetails);
+											var resultFragment = document.createDocumentFragment();
+											FragmentController.composeResultFragment(resultFragment, placeDetails, Constants.PLACES);
+											resultsContainer.appendChild(resultFragment);
 
-									PlaceDetailsController.getPlaceDetailsResult(placeId, function(placeDetails){
-										MapController.composeResultMarker(placeDetails);
-										var resultFragment = document.createDocumentFragment();
-										FragmentController.composeResultFragment(resultFragment, placeDetails, Constants.DEFAULT);
-										resultsContainer.appendChild(resultFragment);
-										// var zenPlace = new ZenPlace(AppUtility.generateZenPlaceId());
-										// Object.keys(result).map(function(key, index) {
-										// 	if (typeof zenPlace[key] !== 'undefined' && key != 'id' && result.hasOwnProperty(key)) {
-										// 		zenPlace[key] = result[key];   
-										// 	}
-										// });
+											Globals.zenPlacesResult.push(placeDetails.id);
+										});
 
-										// CacheUtility.storeZenPlaceResult(zenPlace.id, result);
+										if (index == places.length-1) { // remove fullScreenFragment
+											CacheUtility.storeZenPlacesResult(query, Globals.zenPlacesResult);
+											Globals.zenPlacesResult = [];
+											body.removeChild(body.firstChild);
+											body.style.backgroundPosition = "-500px";
+										}
 
-									});
-
-									if (index == places.length-1) { // remove fullScreenFragment
-										body.removeChild(body.firstChild);
-										body.style.backgroundPosition = "-500px";
-									}
-
-								}, index*600);
-							})(index);
+									}, index*600);
+								})(index);
+							});
 						});
 					});
-				});
-			}	
-
-			// 		PlacesService.getPlacesFromRequest(request, function(results) {
-			// 			var body = document.getElementsByTagName("body")[0];
-			// 			var fullScreenFragment = document.createDocumentFragment();
-			// 			var resultsContainer = document.getElementById('results');
-
-			// 			FragmentController.composeFullScreenFragment(fullScreenFragment, Constants.DELAY);
-			// 			body.insertBefore(fullScreenFragment, body.firstChild);
-
-			// 			resultsContainer.innerHTML = '';
-
-			// 			results.forEach(function(result, index){
-			// 				(function(index){
-			// 					setTimeout(function(){
-			// 						var placeId = result.place_id;
-
-			// 						PlacesService.getPlaceDetailsFromPlaceId(placeId, function(result) {
-			// 							MapController.composeResultMarker(result);
-			// 							var resultFragment = document.createDocumentFragment();
-			// 							FragmentController.composeResultFragment(resultFragment, result, Constants.DEFAULT);
-			// 							resultsContainer.appendChild(resultFragment);
-			// 							CacheUtility.storePlaceResult(placeId, result);
-
-			// 							var zenPlace = new ZenPlace(AppUtility.generateZenPlaceId());
-			// 							Object.keys(result).map(function(key, index) {
-			// 								if (typeof zenPlace[key] !== 'undefined' && key != 'id' && result.hasOwnProperty(key)) {
-			// 									zenPlace[key] = result[key];   
-			// 								}
-			// 							});
-
-			// 							CacheUtility.storeZenPlaceResult(zenPlace.id, result);
-			// 						});
-
-			// 						if (index == results.length-1) { // remove fullScreenFragment
-			// 							body.removeChild(body.firstChild);
-			// 						}
-
-			// 					}, index*600);
-			// 				})(index);
-			// 			});
-			// 		});
-			// 	});
-			// }
+				} // end resultFragment
+				var resultsMenuFragment = document.createDocumentFragment();
+				var lastResultItem = document.getElementsByClassName('.')
+				var resultsMenu = document.getElementById('results-menu');
+				FragmentController.composeResultMenuFragment(resultsMenuFragment, Constants.INLINE);
+				resultsMenu.appendChild(resultsMenuFragment);
+			}
 		}
 	}
 }();

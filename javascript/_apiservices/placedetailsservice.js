@@ -8,7 +8,7 @@ PlaceDetailsService = function() {
 				if (status === google.maps.places.PlacesServiceStatus.OK) {
 					callback(result);
 				} else {
-					console.log('getDetails was not successful due to the following: ' + status);
+					alert('getDetails was not successful due to the following: ' + status);
 				}
 			});
 		}

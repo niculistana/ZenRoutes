@@ -3,6 +3,9 @@ const SEARCH_PLACEHOLDER_TEXT = 'Which city are you visiting?'
 const LOADING_RESULTS = 'Hang on for a sec while we gather places to go to...';
 
 const GO_BUTTON_TEXT = 'GO';
+const PLACES_BUTTON_TEXT = 'PLACES';
+const ROUTES_BUTTON_TEXT = 'MY ROUTE';
+const SAVE_BUTTON_TEXT = 'SAVE';
 const SETTINGS_BUTTON_TEXT = 'SETTINGS';
 
 
@@ -10,5 +13,8 @@ module.exports = {
 	SEARCH_PLACEHOLDER_TEXT,
 	LOADING_RESULTS,
 	GO_BUTTON_TEXT,
+	PLACES_BUTTON_TEXT,
+	ROUTES_BUTTON_TEXT,
+	SAVE_BUTTON_TEXT,
 	SETTINGS_BUTTON_TEXT
 };

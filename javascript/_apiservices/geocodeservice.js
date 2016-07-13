@@ -10,7 +10,7 @@ GeocodeService = function() {
 				if (status === google.maps.GeocoderStatus.OK && results[0].geometry) {
 					callback(results[0]);
 				} else {
-					console.log('Geocoder service was not successful due to the following: ' + status);
+					alert('Geocoder service was not successful due to the following: ' + status);
 				}
 			});
 		}

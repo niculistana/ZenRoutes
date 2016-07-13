@@ -1,5 +1,7 @@
 @import url(../assets/fonts/times_sans_serif.ttf);
+
 @import url(https://fonts.googleapis.com/css?family=Heebo:300,400,600);
+
 @import "helpers/_variables.scss";
 @import "helpers/_placeholders.scss";
 @import "helpers/_mixins.scss";
@@ -12,12 +14,17 @@ h1 {
 	font-weight: 600;
 }
 
+h3 {
+	font-weight: 300;
+}
+
 p, li {
 	font-weight: 300;
 }
 
 a {
 	text-decoration: none;
+	cursor: pointer;
 }
 
 a:hover {
@@ -25,7 +32,7 @@ a:hover {
 }
 
 body {
-	background-image: url("../assets/images/nyc_skyline.jpg");
+	background-image: url("../../assets/images/nyc_skyline.jpg");
 	background-repeat: no-repeat;
 	-webkit-transition: all .8s ease;
 	-moz-transition: all .8s ease;
@@ -35,18 +42,27 @@ body {
 }
 
 .content {
-	position:relative;
+	position: relative;
 	top: 50px;
 }
 
 #map {
-	height: 560px;
+	height: 550px;
 }
 
-#results{
-	height: 560px;
-	overflow: scroll;
-	background-color: #ccc;
+.btn {
+	padding: 14px 24px;
+	width: 100%;
+	border: 0 none;
+	font-weight: 600;
+	font-family: $secondary-font;
+	letter-spacing: 1px;
+	text-transform: uppercase;
+	background-color: $muted-blue;
+}
+
+.btn:focus, .btn:active:focus, .btn.active:focus {
+	outline: 0 none;
 }
 
 #search-input {
@@ -60,18 +76,23 @@ body {
 .input-group {
 	.input-group-addon {
 		background-color: #fffff;
-		border:0;
+		border: 0;
 	}
 }
 
 .header {
-	position: absolute;
-	@include dimensions(100%,50px);
+	position: fixed;
+	width: 100%;
+
+	@include dimensions(100%, 50px);
+
 	background-color: $oak-brown;
 
 	#header_components {
 		@extend %center_horizontally;
-		@include dimensions(90%,50px);
+
+		@include dimensions(90%, 50px);
+
 		background-color: $oak-brown;
 		position: absolute;
 
@@ -83,7 +104,6 @@ body {
 			top: 50%;
 			padding-left: 10px;
 			transform: translateY(-50%);
-
 			a {
 				text-decoration: none;
 				color: #FFF;
@@ -98,31 +118,113 @@ body {
 
 .pac-container {
 	box-shadow: unset;
-	.pac-item{
+
+	.pac-item {
 		text-align: center;
 		font-family: $secondary-font;
 		font-size: 20px;
 		text-align: center;
 		border: 0;
-		padding:15px;
-		.pac-item-query{
+		padding: 15px;
+
+		.pac-item-query {
 			font-family: $secondary-font;
 			font-size: 20px;
 			text-align: center;
 			border: 0;
 			padding: 2px;
 		}
-		.pac-icon{
+
+		.pac-icon {
 			display: none;
 		}
+
 		span:nth-child(3) {
 			display: none;
 		}
 	}
 }
 
+.resultsContainer {
+	background-color: #ccc;
+	height: 550px;
+
+	#results {
+		height: 550px;
+		overflow: scroll;
+	}
+
+	#results-menu {
+		position: relative;
+		color: #fff;
+		height: 50px;
+		margin-top: -50px;
+		overflow: hidden;
+		.navbar-default{
+			background-color: $oak-brown;
+			border-radius: 0;
+			border: 0;
+			ul {
+				li {
+					a {
+						color: #fff;
+					}
+				}
+				li.active {
+					a {
+						color: #000;
+					}
+				}
+				li.disabled {
+					a {
+						color: #777;
+					}
+				}
+			}
+		}
+	}
+}
+
+.card-container {
+	background-color: #fff;
+	margin-bottom: 10px;
+
+	.card-info {
+		padding: 10px;
+
+		.cardImageContainer {
+			display: inline-block;
+			overflow: hidden;
+
+			img {
+				width: 100%;
+				height: auto;
+				-webkit-transition: all .75s ease;
+				-moz-transition: all .75s ease;
+				-ms-transition: all .75s ease;
+				-o-transition: all .75s ease;
+				transition: all .75s ease;
+			}
+
+			img:hover {
+				-webkit-transform: scale(1.25);
+				-moz-transform: scale(1.25);
+				-ms-transform: scale(1.25);
+				-o-transform: scale(1.25);
+				transform: scale(1.25);
+				cursor: pointer;
+			}
+		}
+	}
+}
+
+.card-container:last-of-type{
+	margin-bottom: 60px;
+}
+
 .fullscreen {
-	@include dimensions(100%,100%);
+	@include dimensions(100%, 100%);
+
 	position: absolute;
 	padding: 0;
 	margin: 0;
@@ -132,7 +234,9 @@ body {
 
 .delayOverlay {
 	@extend %push-forward;
+
 	@extend %blur;
+
 	cursor: wait;
 
 	h1 {
@@ -147,6 +251,24 @@ body {
 }
 
 
-.top-offset-sm { margin-top: 2px; }
-.top-offset-m { margin-top: 5px; }
-.top-offset-l { margin-top: 10px; }
+::-webkit-scrollbar {
+	-webkit-appearance: none;
+	width: 7px;
+}
+::-webkit-scrollbar-thumb {
+	border-radius: 4px;
+	background-color: rgba(0,0,0,.5);
+	-webkit-box-shadow: 0 0 1px rgba(255,255,255,.5);
+}
+
+.top-offset-sm {
+	margin-top: 2px;
+}
+
+.top-offset-m {
+	margin-top: 5px;
+}
+
+.top-offset-l {
+	margin-top: 10px;
+}

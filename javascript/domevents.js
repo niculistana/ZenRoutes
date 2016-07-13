@@ -22,104 +22,73 @@ SearchEvents = function() {
 			var searchInput = document.getElementById('search-input');
 			var query = searchInput.value;
 
+			var body = document.getElementsByTagName("body")[0];
+			var fullScreenFragment = document.createDocumentFragment();
+			var resultsContainer = document.getElementById('results');
+
 			if (query.length > 0) {
 				CacheUtility.storeQuery(query);
-
 				MapView.MarkerView().clearAllMarkers();
+				resultsContainer.innerHTML = '';
 
-				GeocodeController.getGeocodeResult(query, function(coordinates){
-					var [x, y] = coordinates.split(',').map(parseFloat);
-
+				if (Globals.geocodeCache[query] && Globals.zenPlacesResultCache[query]) {
+					var [x, y] = Globals.geocodeCache[query].split(',').map(parseFloat);
 					var origin = {lat: x, lng: y};
-
 					MapController.composeOriginMarker(origin);
 
-					PlacesController.getPlacesResult(coordinates, function(places){
+					Globals.zenPlacesResultCache[query].forEach(function(result, index){
+						var placeDetails = Globals.zenPlaceDetailsCache[result];
+						MapController.composeResultMarker(placeDetails);
+						var resultFragment = document.createDocumentFragment();
+						FragmentController.composeResultFragment(resultFragment, placeDetails, Constants.PLACES);
+						resultsContainer.appendChild(resultFragment);
+					});
+					
+					body.style.backgroundPosition = "-500px";
+				} else {
+					GeocodeController.getGeocodeResult(query, function(coordinates){
+						var [x, y] = coordinates.split(',').map(parseFloat);
+						var origin = {lat: x, lng: y};
 
-						var body = document.getElementsByTagName("body")[0];
-						var fullScreenFragment = document.createDocumentFragment();
-						var resultsContainer = document.getElementById('results');
+						MapController.composeOriginMarker(origin);
 
-						FragmentController.composeFullScreenFragment(fullScreenFragment, Constants.DELAY);
-						body.insertBefore(fullScreenFragment, body.firstChild);
+						PlacesController.getPlacesResult(coordinates, function(places){
+							FragmentController.composeFullScreenFragment(fullScreenFragment, Constants.DELAY);
+							body.insertBefore(fullScreenFragment, body.firstChild);
 
-						resultsContainer.innerHTML = '';
+							places.forEach(function(result, index){
+								(function(index){
+									setTimeout(function(){
+										var placeId = result.place_id;
 
-						places.forEach(function(result, index){
-							(function(index){
-								setTimeout(function(){
-									var placeId = result.place_id;
+										PlaceDetailsController.getPlaceDetailsResult(placeId, function(placeDetails){
+											MapController.composeResultMarker(placeDetails);
+											var resultFragment = document.createDocumentFragment();
+											FragmentController.composeResultFragment(resultFragment, placeDetails, Constants.PLACES);
+											resultsContainer.appendChild(resultFragment);
 
-									PlaceDetailsController.getPlaceDetailsResult(placeId, function(placeDetails){
-										MapController.composeResultMarker(placeDetails);
-										var resultFragment = document.createDocumentFragment();
-										FragmentController.composeResultFragment(resultFragment, placeDetails, Constants.DEFAULT);
-										resultsContainer.appendChild(resultFragment);
-										// var zenPlace = new ZenPlace(AppUtility.generateZenPlaceId());
-										// Object.keys(result).map(function(key, index) {
-										// 	if (typeof zenPlace[key] !== 'undefined' && key != 'id' && result.hasOwnProperty(key)) {
-										// 		zenPlace[key] = result[key];   
-										// 	}
-										// });
+											Globals.zenPlacesResult.push(placeDetails.id);
+										});
 
-										// CacheUtility.storeZenPlaceResult(zenPlace.id, result);
+										if (index == places.length-1) { // remove fullScreenFragment
+											CacheUtility.storeZenPlacesResult(query, Globals.zenPlacesResult);
+											Globals.zenPlacesResult = [];
+											body.removeChild(body.firstChild);
+											body.style.backgroundPosition = "-500px";
+										}
 
-									});
-
-									if (index == places.length-1) { // remove fullScreenFragment
-										body.removeChild(body.firstChild);
-										body.style.backgroundPosition = "-500px";
-									}
-
-								}, index*600);
-							})(index);
+									}, index*600);
+								})(index);
+							});
 						});
 					});
-				});
-			}	
-
-			// 		PlacesService.getPlacesFromRequest(request, function(results) {
-			// 			var body = document.getElementsByTagName("body")[0];
-			// 			var fullScreenFragment = document.createDocumentFragment();
-			// 			var resultsContainer = document.getElementById('results');
-
-			// 			FragmentController.composeFullScreenFragment(fullScreenFragment, Constants.DELAY);
-			// 			body.insertBefore(fullScreenFragment, body.firstChild);
-
-			// 			resultsContainer.innerHTML = '';
-
-			// 			results.forEach(function(result, index){
-			// 				(function(index){
-			// 					setTimeout(function(){
-			// 						var placeId = result.place_id;
-
-			// 						PlacesService.getPlaceDetailsFromPlaceId(placeId, function(result) {
-			// 							MapController.composeResultMarker(result);
-			// 							var resultFragment = document.createDocumentFragment();
-			// 							FragmentController.composeResultFragment(resultFragment, result, Constants.DEFAULT);
-			// 							resultsContainer.appendChild(resultFragment);
-			// 							CacheUtility.storePlaceResult(placeId, result);
-
-			// 							var zenPlace = new ZenPlace(AppUtility.generateZenPlaceId());
-			// 							Object.keys(result).map(function(key, index) {
-			// 								if (typeof zenPlace[key] !== 'undefined' && key != 'id' && result.hasOwnProperty(key)) {
-			// 									zenPlace[key] = result[key];   
-			// 								}
-			// 							});
-
-			// 							CacheUtility.storeZenPlaceResult(zenPlace.id, result);
-			// 						});
-
-			// 						if (index == results.length-1) { // remove fullScreenFragment
-			// 							body.removeChild(body.firstChild);
-			// 						}
-
-			// 					}, index*600);
-			// 				})(index);
-			// 			});
-			// 		});
-			// 	});
-			// }
+				} // end resultFragment
+				var resultsMenuFragment = document.createDocumentFragment();
+				var lastResultItem = document.getElementsByClassName('.')
+				var resultsMenu = document.getElementById('results-menu');
+				FragmentController.composeResultMenuFragment(resultsMenuFragment, Constants.INLINE);
+				resultsMenu.appendChild(resultsMenuFragment);
+			}
 		}
 	}
 }();

@@ -7,6 +7,7 @@ CacheUtility = function() {
 	var placesCacheKey = Constants.PLACES_CACHE_KEY;
 	var zenPlaceCacheKey = Constants.ZEN_PLACE_CACHE_KEY;
 	var zenPlaceDetailsCacheKey = Constants.ZEN_PLACE_DETAILS_CACHE_KEY;
+	var zenPlacesResultCacheKey = Constants.ZEN_PLACES_RESULT_CACHE_KEY;
 
 	return {
 		storeQuery: function(query) {
@@ -16,8 +17,8 @@ CacheUtility = function() {
 		clearQueryCache: function() {
 			localStorage[queryCacheKey] = '';
 		},
-		storeGeocodeResult: function(query, result) {
-			Globals.geocodeCache[query] = result;
+		storeGeocodeCoordinates: function(query, coordinates) {
+			Globals.geocodeCache[query] = coordinates;
 			localStorage.setItem(geocodeCacheKey, JSON.stringify(Globals.geocodeCache));
 		},
 		clearGeocodeCache: function() {
@@ -43,6 +44,13 @@ CacheUtility = function() {
 		},
 		clearZenPlaceDetailsCache: function() {
 			localStorage[zenPlaceDetailsCacheKey] = '';
+		},
+		storeZenPlacesResult: function(query, result) {
+			Globals.zenPlacesResultCache[query] = result;
+			localStorage.setItem(zenPlacesResultCacheKey, JSON.stringify(Globals.zenPlacesResultCache));
+		},
+		clearZenPlacesResultCache: function() {
+			localStorage[zenPlacesResultCacheKey] = '';
 		}	
 	}
 }();
