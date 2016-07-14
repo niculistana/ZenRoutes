@@ -9,7 +9,7 @@ var ZenPlace = function(id){
 	this.mainPhotoUrl = '';
 	this.zenLevel = -1;
 	this.options = {
-		saved: false,
+		inRoute: false,
 		promoted: false,
 		last_accessed: Date.now()
 	}

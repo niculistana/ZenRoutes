@@ -77,7 +77,7 @@ var ZenPlace = function(id){
 	this.mainPhotoUrl = '';
 	this.zenLevel = -1;
 	this.options = {
-		saved: false,
+		inRoute: false,
 		promoted: false,
 		last_accessed: Date.now()
 	}
@@ -167,22 +167,42 @@ MapController = function() {
 		},
 
 		composeResultMarker: function(result) {
+			var iconUrl = (result.mainPhotoUrl !== '') ? result.mainPhotoUrl.slice(0, -12) + 'w35-h35-k/' :  './assets/icons/markers.png';
+
 			var defaultIcon = {
-				url: './assets/icons/markers.png',
+				url: iconUrl,
 				scaledSize: new google.maps.Size(20, 20),
 				origin: new google.maps.Point(0, 0),
 				anchor: new google.maps.Point(10, 10)
 			};
 
-			var iconUrl = (result.mainPhotoUrl !== '') ? result.mainPhotoUrl.slice(0, -12) + 'w35-h35-k/' : defaultIcon;
-
 			var marker = new google.maps.Marker({
 				map: window.map,
 				position: result.geometry.location,
 				animation: google.maps.Animation.DROP,
-				icon: iconUrl
+				icon: defaultIcon
 			});	
 			Globals.markers.push(marker);
+		},
+
+		composeRouteCircle: function(zenPlaceId){
+			var routeItem = Globals.zenPlaceDetailsCache[zenPlaceId];
+			
+			var cityCircle = new google.maps.Circle({
+				strokeColor: '#B73830',
+				strokeOpacity: 0.8,
+				strokeWeight: 2,
+				fillColor: '#F7685C',
+				fillOpacity: 0.35,
+				map: window.map,
+				center: {lat: routeItem.geometry.location.lat, lng: routeItem.geometry.location.lng},
+				radius: 500
+			});
+			Globals.routeCircles[zenPlaceId] = cityCircle;
+		},
+
+		removeRouteCircle: function(zenPlaceId){
+			Globals.routeCircles[zenPlaceId].setMap(null);
 		}
 	};
 }();
@@ -244,11 +264,11 @@ var Globals = require('../_variables/globals');
 
 RouteController = function() {
 	return{
-		removeFromRoute: function(resultId) {
-			Globals.route.splice(resultId, 1);
+		addToRoute: function(route) {
+			Globals.route[route.id] = route;
 		},
-		addToRoute: function(resultId) {
-			Globals.route.push(resultId);
+		removeFromRoute: function(route) {
+			delete Globals.route[route.id];
 		}
 	}
 }();
@@ -335,7 +355,8 @@ Globals = function () {
 		queries: [],
 		results: [],
 		markers:[],
-		route:[],
+		route:{},
+		routeCircles:[],
 		zenPlacesResult:[],
 		queryCache: (localStorage.getItem(Constants.QUERY_CACHE_KEY)) ? JSON.parse(localStorage.getItem(Constants.QUERY_CACHE_KEY)) : [],
 		geocodeCache: (localStorage.getItem(Constants.GEOCODE_CACHE_KEY)) ? JSON.parse(localStorage.getItem(Constants.GEOCODE_CACHE_KEY)) : {},
@@ -376,6 +397,7 @@ module.exports = {
 var DomEvents = require('./../domevents');
 var Strings = require('./../_variables/strings');
 var RouteController = require('./../_controllers/routecontroller');
+var Constants = require('./../_variables/constants');
 
 var SearchView = function(){
 	var goButtonText = Strings.GO_BUTTON_TEXT;
@@ -438,14 +460,13 @@ var ResultView = function() {
 			var cardImageContainer = document.createElement('div');
 			var cardImage = document.createElement('img');
 			var cardName = document.createElement('h3');
-			var milesAway = document.createElement('p');
+			var address = document.createElement('p');
 			var addToRouteButton = document.createElement('button');
 
 			if (result.mainPhotoUrl) {
 				cardImage.setAttribute('src', result.mainPhotoUrl);
 			} else {
 				var location = result.geometry.location.lat + "," + result.geometry.location.lng;
-				console.log(location);
 				cardImage.setAttribute('src', 'https://maps.googleapis.com/maps/api/streetview?size=600x300&location=' + location + '&heading=200&&fov=100&pitch=20&key=AIzaSyBgESRsFdB2XZSZtPhiVnKWzG0JeR-nGGM');
 			}
 
@@ -455,32 +476,41 @@ var ResultView = function() {
 			cardImageContainer.appendChild(cardImage);
 
 			cardName.innerHTML = result.name;
-			milesAway.innerHTML = result.formatted_address;
-			addToRouteButton.setAttribute('class', 'btn btn-add');
-			addToRouteButton.innerHTML = Strings.ADD_TO_ROUTE_TEXT;
+			address.innerHTML = result.formatted_address;
+
+			if (!result.options.inRoute) {
+				addToRouteButton.setAttribute('class', 'btn btn-add');
+				addToRouteButton.innerHTML = Strings.ADD_TO_ROUTE_TEXT;	
+			} else {
+				addToRouteButton.setAttribute('class', 'btn btn-remove');
+				addToRouteButton.innerHTML = Strings.REMOVE_FROM_ROUTE_TEXT;	
+			}
 
 			addToRouteButton.addEventListener('click', function() {
 				var [placeControl,routeControl,saveControl] = document.getElementsByClassName('nav navbar-nav')[0].children;
-
 				if (addToRouteButton.className === 'btn btn-add') {
 					addToRouteButton.className = 'btn btn-remove'
 					addToRouteButton.innerHTML = Strings.REMOVE_FROM_ROUTE_TEXT;
-					RouteController.addToRoute(result.id);
+					result.options.inRoute = true;
+					RouteController.addToRoute(result);
+					MapController.composeRouteCircle(result.id);
 				} else {
 					addToRouteButton.className = 'btn btn-add'
 					addToRouteButton.innerHTML = Strings.ADD_TO_ROUTE_TEXT;
-					RouteController.removeFromRoute(result.id);					
+					result.options.inRoute = false;
+					RouteController.removeFromRoute(result);	
+					MapController.removeRouteCircle(result.id);
 				}
 
-				routeControl.className = (Globals.route.length > 0) ? '' : 'disabled';
-				routeControl.firstChild.innerHTML = (Globals.route.length > 0) ? Strings.ROUTES_BUTTON_TEXT + ' (' + Globals.route.length + ')' : Strings.ROUTES_BUTTON_TEXT;
-				saveControl.className = (Globals.route.length > 0) ? '' : 'disabled';
+				routeControl.className = (Object.keys(Globals.route).length > 0) ? '' : 'disabled';
+				routeControl.firstChild.innerHTML = (Object.keys(Globals.route).length > 0) ? Strings.ROUTES_BUTTON_TEXT + ' (' + Object.keys(Globals.route).length + ')' : Strings.ROUTES_BUTTON_TEXT;
+				saveControl.className = (Object.keys(Globals.route).length > 0) ? '' : 'disabled';
 			});
 
 			cardInfo.setAttribute('class', 'card-info');
 			cardInfo.appendChild(cardImageContainer); 
 			cardInfo.appendChild(cardName); 
-			cardInfo.appendChild(milesAway); 
+			cardInfo.appendChild(address); 
 			cardInfo.appendChild(addToRouteButton); 
 
 			cardContainer.setAttribute('class', 'card-container');
@@ -559,14 +589,31 @@ var ResultMenuView = function() {
 					}
 
 					if (e.target.parentElement.className !== 'disabled') {
+						var searchInput = document.getElementById('search-input');
+						var query = searchInput.value;
+						var resultsContainer = document.getElementById('results');
+						resultsContainer.innerHTML = '';
+
 						if (result === placesButtonText) {
+							if (Globals.zenPlacesResultCache[query]) {
+								Globals.zenPlacesResultCache[query].forEach(function(result, index){
+									var placeDetails = Globals.zenPlaceDetailsCache[result];
+									var resultFragment = document.createDocumentFragment();
+									FragmentController.composeResultFragment(resultFragment, placeDetails, Constants.PLACES);
+									resultsContainer.appendChild(resultFragment);
+								});
+							}
 							console.log('places');
 						}else if (result === routesButtonText) {
-							console.log('routes');
-							// render resultsAsRoute
+							Object.keys(Globals.route).forEach(function(key, index){
+								var placeDetails = Globals.route[key];
+								var resultFragment = document.createDocumentFragment();
+								FragmentController.composeResultFragment(resultFragment, placeDetails, Constants.PLACES);
+								resultsContainer.appendChild(resultFragment);
+							});
 						} else {
 							console.log('save')
-							// Create entry in database with route_id | [route]
+							// Create entry in mongo database with route_id | [route]
 						}
 					}
 				});
@@ -603,7 +650,7 @@ module.exports = {
 	ResultMenuView,
 	FullScreenView
 }
-},{"./../_controllers/routecontroller":10,"./../_variables/strings":14,"./../domevents":19}],16:[function(require,module,exports){
+},{"./../_controllers/routecontroller":10,"./../_variables/constants":12,"./../_variables/strings":14,"./../domevents":19}],16:[function(require,module,exports){
 var Strings = require('./../_variables/strings');
 var Globals = require('./../_variables/globals');
 
