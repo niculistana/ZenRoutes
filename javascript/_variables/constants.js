@@ -1,8 +1,11 @@
 const INLINE = 'inline';
 const DEFAULT = 'default';
 
-const PLACES = 'places';
-const ROUTES = 'routes';
+const ORIGIN_MARKER = 'originMarker';
+const RESULT_MARKER = 'resultMarker';
+
+const PLACES_RESULT_VIEW = 'placesResultView';
+const ROUTE_RESULT_VIEW = 'routesResultView';
 
 const DELAY = 'delay';
 const DIM = 'dim';
@@ -17,8 +20,10 @@ const ZEN_PLACES_RESULT_CACHE_KEY = 'zenPlacesResultCache';
 module.exports = {
 	INLINE,
 	DEFAULT,
-	PLACES,
-	ROUTES,
+	ORIGIN_MARKER,
+	RESULT_MARKER,
+	PLACES_RESULT_VIEW,
+	ROUTE_RESULT_VIEW,
 	DELAY,
 	DIM,
 	QUERY_CACHE_KEY,

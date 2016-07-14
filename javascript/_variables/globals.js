@@ -7,6 +7,7 @@ Globals = function () {
 		queries: [],
 		results: [],
 		markers:[],
+		infoWindows:[],
 		route:{},
 		routeCircles:[],
 		zenPlacesResult:[],

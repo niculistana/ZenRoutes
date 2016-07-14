@@ -3,29 +3,45 @@ var Globals = require('./../_variables/globals');
 
 var MarkerView = function() {
 	return {
-		markerAsAll: function() {
-			console.log('markerAsAll ' , resultList);
+		markerAsOrigin: function(result) {
+
+			var marker = new google.maps.Marker({
+				map: window.map,
+				position: {lat: result.lat, lng: result.lng},
+				animation: google.maps.Animation.DROP
+			});	
+			Globals.markers.push(marker);
 		},
-		markerAsSelected: function() {
-			console.log('markerAsSelected ' , resultList);
-		},
-		markerAsNotSelected: function() {
-			console.log('markerAsNotSelected ' , resultList);
-		},
-		clearAllMarkers: function() {
-			for (var i = 0; i < Globals.markers.length; i++ ) {
-				Globals.markers[i].setMap(null);
+
+		markerAsResult: function(result) {
+			var defaultIcon = {
+				url: './assets/icons/markers.png',
+				scaledSize: new google.maps.Size(20, 20),
+				origin: new google.maps.Point(0, 0),
+				anchor: new google.maps.Point(10, 10)
+			};
+
+			var photoIcon = {
+				url: result.mainPhotoUrl.slice(0, -12) + 'w35-h35-k/',
+				origin: new google.maps.Point(0, 0),
+				anchor: new google.maps.Point(10, 10)
 			}
-			Globals.markers = [];
-		}	
+
+			var marker = new google.maps.Marker({
+				map: window.map,
+				position: result.geometry.location,
+				animation: google.maps.Animation.DROP,
+				icon: (result.mainPhotoUrl) ? photoIcon : defaultIcon
+			});	
+			Globals.markers.push(marker);
+		}
 	}
 };
 
-var InfoWindowView = function(map, resultList) {
-};
+// var InfoWindowView = function(map, resultList) {
+// };
 
 module.exports = {
-	MarkerView,
-	InfoWindowView
+	MarkerView
 }
 

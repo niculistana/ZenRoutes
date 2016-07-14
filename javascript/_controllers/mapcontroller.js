@@ -1,42 +1,65 @@
 var Globals = require('./../_variables/globals');
+var Constants = require('./../_variables/constants');
+var MapView = require('./../_views/mapview');
 
 MapController = function() {
 	var mainContent = document.getElementById('main-content');
 
 	return {
-		composeOriginMarker: function(location) {
-			var marker = new google.maps.Marker({
-				map: window.map,
-				position: location,
-				animation: google.maps.Animation.DROP
-			});	
-
-			map.setCenter(location);
-			Globals.markers.push(marker);
+		composeMarker: function(result, view) {
+			if (view === Constants.ORIGIN_MARKER) {
+				MapView.MarkerView().markerAsOrigin(result);
+			} else if (view === Constants.RESULT_MARKER) {
+				MapView.MarkerView().markerAsResult(result);
+			}
 		},
 
-		composeResultMarker: function(result) {
-			var iconUrl = (result.mainPhotoUrl !== '') ? result.mainPhotoUrl.slice(0, -12) + 'w35-h35-k/' :  './assets/icons/markers.png';
-
-			var defaultIcon = {
-				url: iconUrl,
-				scaledSize: new google.maps.Size(20, 20),
-				origin: new google.maps.Point(0, 0),
-				anchor: new google.maps.Point(10, 10)
-			};
-
-			var marker = new google.maps.Marker({
-				map: window.map,
-				position: result.geometry.location,
-				animation: google.maps.Animation.DROP,
-				icon: defaultIcon
-			});	
-			Globals.markers.push(marker);
+		clearAllMarkers:function() {
+			for (var i = 0; i < Globals.markers.length; i++ ) {
+				Globals.markers[i].setMap(null);
+			}
+			Globals.markers = [];
 		},
 
-		composeRouteCircle: function(zenPlaceId){
-			var routeItem = Globals.zenPlaceDetailsCache[zenPlaceId];
-			
+		composeInfoWindow:function(result, index) {
+			var infoWindow = new google.maps.InfoWindow({
+				disableAutoPan: true,
+				maxWidth: 200
+			});
+
+			var marker = Globals.markers[index];
+
+			var contentItems = (typeof result === 'string') ? result : result.name;
+			var content = contentItems;
+
+			infoWindow.setContent(content);
+
+			google.maps.event.addListener(marker, 'click', function() {
+				infoWindow.open(window.map, marker);
+			});
+
+			Globals.infoWindows.push(infoWindow);
+		},
+
+		showInfoWindow:function(index){
+			var marker = Globals.markers[index];
+			Globals.infoWindows[index].open(window.map, marker);			
+		},
+
+		closeAllInfoWindows:function() {
+			Globals.infoWindows.forEach(function(infoWindow, index) {
+				infoWindow.close()
+			});			
+		},
+
+		clearAllInfoWindows:function(){
+			for (var i = 0; i < Globals.infoWindows.length; i++ ) {
+				Globals.infoWindows[i].setMap(null);
+			}
+			Globals.infoWindows = [];
+		},
+
+		composeRouteCircle: function(routeItem){
 			var cityCircle = new google.maps.Circle({
 				strokeColor: '#B73830',
 				strokeOpacity: 0.8,
@@ -44,14 +67,28 @@ MapController = function() {
 				fillColor: '#F7685C',
 				fillOpacity: 0.35,
 				map: window.map,
-				center: {lat: routeItem.geometry.location.lat, lng: routeItem.geometry.location.lng},
+				center: routeItem.geometry.location,
 				radius: 500
 			});
-			Globals.routeCircles[zenPlaceId] = cityCircle;
+			Globals.routeCircles[routeItem.id] = cityCircle;
 		},
 
-		removeRouteCircle: function(zenPlaceId){
-			Globals.routeCircles[zenPlaceId].setMap(null);
+		removeRouteCircle: function(routeItem){
+			Globals.routeCircles[routeItem.id].setMap(null);
+		},
+
+		clearAllRouteCircles: function(){
+			for (var key in Globals.routeCircles) {
+				if (Globals.routeCircles.hasOwnProperty(key)) {
+					Globals.routeCircles[key].setMap(null);
+				}
+			}
+
+			Globals.routeCircles = {};
+		},
+
+		setCenter: function(location){
+			window.map.panTo(location);
 		}
 	};
 }();

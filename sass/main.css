@@ -126,6 +126,9 @@ body {
         color: #FFF; }
       .header #header_components .logo a:hover {
         background-color: transparent; }
+      .header #header_components .logo sup {
+        font-size: 14px;
+        top: -15px; }
 
 .pac-container {
   box-shadow: unset; }

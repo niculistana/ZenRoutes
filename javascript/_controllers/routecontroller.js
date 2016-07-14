@@ -7,6 +7,9 @@ RouteController = function() {
 		},
 		removeFromRoute: function(route) {
 			delete Globals.route[route.id];
+		},
+		clearAllRouteItems: function(route) {
+			Globals.route = {};
 		}
 	}
 }();

@@ -14,9 +14,9 @@ FragmentController = function() {
 		},
 
 		composeResultFragment: function (fragment, result, view) {
-			if (view === Constants.PLACES) {
+			if (view === Constants.PLACES_RESULT_VIEW) {
 				FragmentView.ResultView().resultsAsPlaces(fragment, result);
-			} else if (view === Constants.ROUTES) {
+			} else if (view === Constants.ROUTE_RESULT_VIEW) {
 				FragmentView.ResultView().resultsAsRoute(fragment, result);
 			}
 		},
