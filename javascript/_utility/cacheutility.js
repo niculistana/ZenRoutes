@@ -1,5 +1,5 @@
-var Globals = require('./_variables/globals');
-var Constants = require('./_variables/constants');
+var Globals = require('./../_variables/globals');
+var Constants = require('./../_variables/constants');
 
 CacheUtility = function() {
 	var queryCacheKey = Constants.QUERY_CACHE_KEY;

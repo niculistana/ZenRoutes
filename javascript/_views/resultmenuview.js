@@ -5,7 +5,7 @@ var Constants = require('./../_variables/constants');
 ResultMenuView = function(){
 	var placesButtonText = Strings.PLACES_BUTTON_TEXT;
 	var routesButtonText = Strings.ROUTES_BUTTON_TEXT;
-	var saveButtonText = Strings.SAVE_BUTTON_TEXT;
+	var sendButtonText = Strings.SEND_BUTTON_TEXT;
 
 	return {
 		resultMenuAsInline: function(fragment) {
@@ -15,7 +15,7 @@ ResultMenuView = function(){
 			navbar.setAttribute('class', 'navbar navbar-default');
 			navbarList.setAttribute('class', 'nav navbar-nav');
 
-			var menuItems = [placesButtonText,routesButtonText,saveButtonText];
+			var menuItems = [placesButtonText,routesButtonText,sendButtonText];
 
 			menuItems.forEach(function(result, index) {
 				var navBarListItem = document.createElement('li');
@@ -56,16 +56,19 @@ ResultMenuView = function(){
 							
 							Object.keys(Globals.route).forEach(function(key, index){
 								var placeDetails = Globals.route[key];
-								var resultFragment = document.createDocumentFragment();
-								FragmentController.composeResultFragment(resultFragment, placeDetails, Constants.ROUTE_RESULT_VIEW);
-								resultsContainer.appendChild(resultFragment);
+								var routeFragment = document.createDocumentFragment();
+								FragmentController.composeResultFragment(routeFragment, placeDetails, Constants.ROUTE_RESULT_VIEW);
+								resultsContainer.appendChild(routeFragment);
 							});
 							
 						} else {
 							placeControl.classList.remove('active');
 							routeControl.classList.remove('active');
 							saveControl.classList.add('active');
-							// Create entry in mongo database with route_id | [route]
+
+							var sendFragment = document.createDocumentFragment();
+							FragmentController.composeResultFragment(sendFragment, null, Constants.SEND_RESULT_VIEW);
+							resultsContainer.appendChild(sendFragment);
 						}
 					}
 				});

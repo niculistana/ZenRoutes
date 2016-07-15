@@ -18,6 +18,8 @@ FragmentController = function() {
 				FragmentView.ResultView().resultsAsPlaces(fragment, result);
 			} else if (view === Constants.ROUTE_RESULT_VIEW) {
 				FragmentView.ResultView().resultsAsRoute(fragment, result);
+			} else if (view === Constants.SEND_RESULT_VIEW) {
+				FragmentView.ResultView().resultsAsSend(fragment);
 			}
 		},
 

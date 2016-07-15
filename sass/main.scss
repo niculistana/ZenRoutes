@@ -82,6 +82,10 @@ body {
 	}
 }
 
+.welcome-message {
+	padding: 10px;
+}
+
 .header {
 	position: fixed;
 	width: 100%;
@@ -199,7 +203,7 @@ body {
 
 .card-container {
 	background-color: #fff;
-	margin-bottom: 2px;
+	margin-bottom: 4px;
 
 	.card-info {
 		padding: 10px;
@@ -247,6 +251,27 @@ body {
 			width: auto;
 			display: inline-block;
 			float: right;
+		}
+	}
+}
+
+.send-container {
+	background-color: #fff;
+	margin-bottom: 2px;
+	.send-info {
+		padding: 10px;
+		h3 {
+			font-size:12px;
+			display: inline-block;
+		}
+		span{
+			input {
+				font-size:12px;
+				height: 48px !important;
+			}
+			button {
+				padding: 8px 24px;
+			}
 		}
 	}
 }

@@ -1,5 +1,5 @@
 var Globals = require('../_variables/globals');
-var CacheUtility = require('../cacheutility');
+var CacheUtility = require('./../_utility/cacheutility');
 var PlaceDetailsService = require('../_apiservices/placedetailsservice');
 var AppUtility = require('../_utility/apputility');
 var ZenPlace = require('../_classes/zenplace');

@@ -1,4 +1,4 @@
-var CacheUtility = require('./../cacheutility');
+var CacheUtility = require('./../_utility/cacheutility');
 var Globals = require('./../_variables/globals');
 
 GeocodeService = function() {

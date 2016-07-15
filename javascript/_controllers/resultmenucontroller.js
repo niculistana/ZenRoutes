@@ -67,8 +67,3 @@ ResultMenuController = function() {
 }();
 
 module.exports = ResultMenuController;
-
-// active, disabled, disabled
-// '', active, ''
-// active, '', ''
-// '', '', active

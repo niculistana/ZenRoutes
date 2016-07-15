@@ -1,4 +1,4 @@
-var CacheUtility = require('./cacheutility');
+var CacheUtility = require('./_utility/cacheutility');
 var MapController = require('./_controllers/mapcontroller');
 var MapView = require('./_views/mapview');
 var Constants = require('./_variables/constants');

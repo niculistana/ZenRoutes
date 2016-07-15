@@ -1,5 +1,5 @@
 (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
-var CacheUtility = require('./../cacheutility');
+var CacheUtility = require('./../_utility/cacheutility');
 var Globals = require('./../_variables/globals');
 
 GeocodeService = function() {
@@ -19,7 +19,7 @@ GeocodeService = function() {
 }();
 
 module.exports = GeocodeService;
-},{"./../_variables/globals":14,"./../cacheutility":20}],2:[function(require,module,exports){
+},{"./../_utility/cacheutility":14,"./../_variables/globals":16}],2:[function(require,module,exports){
 PlaceDetailsService = function() {
 	return {
 		getPlaceDetailsFromPlaceId: function(placeId, callback) {
@@ -111,6 +111,8 @@ FragmentController = function() {
 				FragmentView.ResultView().resultsAsPlaces(fragment, result);
 			} else if (view === Constants.ROUTE_RESULT_VIEW) {
 				FragmentView.ResultView().resultsAsRoute(fragment, result);
+			} else if (view === Constants.SEND_RESULT_VIEW) {
+				FragmentView.ResultView().resultsAsSend(fragment);
 			}
 		},
 
@@ -125,9 +127,9 @@ FragmentController = function() {
 }();
 
 module.exports = FragmentController;
-},{"./../_variables/constants":13,"./../_views/fragmentview":16}],6:[function(require,module,exports){
-var CacheUtility = require('../cacheutility');
-var GeocodeService = require('../_apiservices/geocodeservice');
+},{"./../_variables/constants":15,"./../_views/fragmentview":18}],6:[function(require,module,exports){
+var CacheUtility = require('./../_utility/cacheutility');
+var GeocodeService = require('./../_apiservices/geocodeservice');
 
 GeocodeController = function() {
 	return{
@@ -142,7 +144,7 @@ GeocodeController = function() {
 }();
 
 module.exports = GeocodeController;
-},{"../_apiservices/geocodeservice":1,"../cacheutility":20}],7:[function(require,module,exports){
+},{"./../_apiservices/geocodeservice":1,"./../_utility/cacheutility":14}],7:[function(require,module,exports){
 var Globals = require('./../_variables/globals');
 var Constants = require('./../_variables/constants');
 var MapView = require('./../_views/mapview');
@@ -241,9 +243,9 @@ MapController = function() {
 }();
 
 module.exports = MapController;
-},{"./../_variables/constants":13,"./../_variables/globals":14,"./../_views/mapview":17}],8:[function(require,module,exports){
+},{"./../_variables/constants":15,"./../_variables/globals":16,"./../_views/mapview":19}],8:[function(require,module,exports){
 var Globals = require('../_variables/globals');
-var CacheUtility = require('../cacheutility');
+var CacheUtility = require('./../_utility/cacheutility');
 var PlaceDetailsService = require('../_apiservices/placedetailsservice');
 var AppUtility = require('../_utility/apputility');
 var ZenPlace = require('../_classes/zenplace');
@@ -277,7 +279,7 @@ PlaceDetailsController = function() {
 }();
 
 module.exports = PlaceDetailsController;
-},{"../_apiservices/placedetailsservice":2,"../_classes/zenplace":4,"../_utility/apputility":12,"../_variables/globals":14,"../cacheutility":20}],9:[function(require,module,exports){
+},{"../_apiservices/placedetailsservice":2,"../_classes/zenplace":4,"../_utility/apputility":13,"../_variables/globals":16,"./../_utility/cacheutility":14}],9:[function(require,module,exports){
 var PlacesService = require('../_apiservices/placesservice');
 
 PlacesController = function() {
@@ -367,7 +369,7 @@ module.exports = ResultMenuController;
 // '', active, ''
 // active, '', ''
 // '', '', active
-},{"./../_variables/constants":13,"./../_variables/strings":15,"./../_views/resultmenuview":18}],11:[function(require,module,exports){
+},{"./../_variables/constants":15,"./../_variables/strings":17,"./../_views/resultmenuview":20}],11:[function(require,module,exports){
 var Globals = require('../_variables/globals');
 
 RouteController = function() {
@@ -385,7 +387,54 @@ RouteController = function() {
 }();
 
 module.exports = RouteController;
-},{"../_variables/globals":14}],12:[function(require,module,exports){
+},{"../_variables/globals":16}],12:[function(require,module,exports){
+var Globals = require('./../_variables/globals');
+
+SendController = function() {
+	return {
+		sendRoutesToNumber:function(number) {
+			var validNumber = '+' + number; // should probably add more validation than this...
+			// var message = 'Route for San Francisco, CA, US: ';
+
+			// for (var key in Globals.route) {
+			//     message+=(Globals.route[key].name) + ', ';
+			// }
+
+			// message = message.slice(0, -2);
+			// message += '. Safe travels! - Zenplaces';
+
+			// var client = require('twilio')('ACf5d77be2c47f19cbcc6d2773e46f5043', '338fbafb3c54199bc24b9a129f3acc8e');
+
+			// client.sms.messages.create({
+			// 	body: message,
+			// 	to: validNumber,
+			// 	from: "+16506677314"
+			// }, function(err, sms) {
+			// 	console.log(sms.sid);
+			// });
+
+			// client.sms.messages.create({
+			// 	body: '',
+			// 	to: '+14156132053',
+			// 	from: '+16506677314'
+			// }, function(err, sms) {
+			// 	console.log(sms.sid);
+			// });
+		}, sendRoutesToEmail:function(email) {
+			var message = '';
+			for (var key in Globals.route) {
+			    message+=(Globals.route[key].name) + ', ';
+			}
+
+			message = message.slice(0, -2);
+
+			window.open('mailto:' + email + '?body='+ message);
+		}
+	}
+}();
+
+module.exports = SendController;
+},{"./../_variables/globals":16}],13:[function(require,module,exports){
 AppUtility = function(){
 		if (typeof(Number.prototype.toRad) === 'undefined') {
 			Number.prototype.toRad = function() {
@@ -425,7 +474,66 @@ AppUtility = function(){
 }();
 
 module.exports = AppUtility;
-},{}],13:[function(require,module,exports){
+},{}],14:[function(require,module,exports){
+var Globals = require('./../_variables/globals');
+var Constants = require('./../_variables/constants');
+
+CacheUtility = function() {
+	var queryCacheKey = Constants.QUERY_CACHE_KEY;
+	var geocodeCacheKey = Constants.GEOCODE_CACHE_KEY;
+	var placesCacheKey = Constants.PLACES_CACHE_KEY;
+	var zenPlaceCacheKey = Constants.ZEN_PLACE_CACHE_KEY;
+	var zenPlaceDetailsCacheKey = Constants.ZEN_PLACE_DETAILS_CACHE_KEY;
+	var zenPlacesResultCacheKey = Constants.ZEN_PLACES_RESULT_CACHE_KEY;
+
+	return {
+		storeQuery: function(query) {
+			Globals.queryCache.unshift(query);
+			localStorage.setItem(queryCacheKey, JSON.stringify(Globals.queryCache));
+		},
+		clearQueryCache: function() {
+			localStorage[queryCacheKey] = '';
+		},
+		storeGeocodeCoordinates: function(query, coordinates) {
+			Globals.geocodeCache[query] = coordinates;
+			localStorage.setItem(geocodeCacheKey, JSON.stringify(Globals.geocodeCache));
+		},
+		clearGeocodeCache: function() {
+			localStorage[geocodeCacheKey] = '';
+		},
+		storePlacesResult: function(coordinates, result) {
+			Globals.placesCache[coordinates] = result;
+			localStorage.setItem(placesCacheKey, JSON.stringify(Globals.placesCache));
+		},
+		clearPlacesCache: function() {
+			localStorage[placesCacheKey] = '';
+		},
+		storeZenPlaceResult: function(placeId, result) {
+			Globals.zenPlaceCache[placeId] = result;
+			localStorage.setItem(zenPlaceCacheKey, JSON.stringify(Globals.zenPlaceCache));
+		},
+		clearZenPlaceCache: function() {
+			localStorage[zenPlaceCacheKey] = '';
+		},
+		storeZenPlaceDetailsResult: function(zenPlaceId, result) {
+			Globals.zenPlaceDetailsCache[zenPlaceId] = result;
+			localStorage.setItem(zenPlaceDetailsCacheKey, JSON.stringify(Globals.zenPlaceDetailsCache));
+		},
+		clearZenPlaceDetailsCache: function() {
+			localStorage[zenPlaceDetailsCacheKey] = '';
+		},
+		storeZenPlacesResult: function(query, result) {
+			Globals.zenPlacesResultCache[query] = result;
+			localStorage.setItem(zenPlacesResultCacheKey, JSON.stringify(Globals.zenPlacesResultCache));
+		},
+		clearZenPlacesResultCache: function() {
+			localStorage[zenPlacesResultCacheKey] = '';
+		}	
+	}
+}();
+
+module.exports = CacheUtility;
+},{"./../_variables/constants":15,"./../_variables/globals":16}],15:[function(require,module,exports){
 const INLINE = 'inline';
 const DEFAULT = 'default';
 
@@ -434,6 +542,7 @@ const RESULT_MARKER = 'resultMarker';
 
 const PLACES_RESULT_VIEW = 'placesResultView';
 const ROUTE_RESULT_VIEW = 'routesResultView';
+const SEND_RESULT_VIEW = 'sendResultView';
 
 const RESULT_MENU_PLACES = 'resultMenuPlaces';
 const RESULT_MENU_ROUTE = 'resultMenuRoute';
@@ -456,6 +565,7 @@ module.exports = {
 	RESULT_MARKER,
 	PLACES_RESULT_VIEW,
 	ROUTE_RESULT_VIEW,
+	SEND_RESULT_VIEW,
 	RESULT_MENU_PLACES,
 	RESULT_MENU_ROUTE,
 	RESULT_MENU_SAVE,
@@ -468,7 +578,7 @@ module.exports = {
 	ZEN_PLACE_DETAILS_CACHE_KEY,
 	ZEN_PLACES_RESULT_CACHE_KEY
 };
-},{}],14:[function(require,module,exports){
+},{}],16:[function(require,module,exports){
 var Constants = require('./constants');
 
 Globals = function () {
@@ -492,7 +602,7 @@ Globals = function () {
 }();
 
 module.exports = Globals;
-},{"./constants":13}],15:[function(require,module,exports){
+},{"./constants":15}],17:[function(require,module,exports){
 const SEARCH_PLACEHOLDER_TEXT = 'Which city are you visiting?'
 
 const LOADING_RESULTS = 'Hang on for a sec while we gather places to go to...';
@@ -502,8 +612,10 @@ const PLACES_BUTTON_TEXT = 'PLACES';
 const ADD_TO_ROUTE_TEXT = 'ADD TO ROUTE';
 const REMOVE_FROM_ROUTE_TEXT = 'REMOVE FROM ROUTE';
 const ROUTES_BUTTON_TEXT = 'ROUTE';
-const SAVE_BUTTON_TEXT = 'SAVE';
+const SEND_BUTTON_TEXT = 'SEND';
 const SETTINGS_BUTTON_TEXT = 'SETTINGS';
+
+const EMAIL_OPTION_TEXT = 'Email routes to a friend';
 
 const TRAVEL_QUOTES = ['Adventure is worthwhile. – Aesop',
  'A journey is best measured in friends, rather than miles. – Tim Cahill',
@@ -525,16 +637,19 @@ module.exports = {
 	ADD_TO_ROUTE_TEXT,
 	REMOVE_FROM_ROUTE_TEXT,
 	ROUTES_BUTTON_TEXT,
-	SAVE_BUTTON_TEXT,
+	SEND_BUTTON_TEXT,
 	SETTINGS_BUTTON_TEXT,
+	EMAIL_OPTION_TEXT,
 	TRAVEL_QUOTES,
 	NO_ROUTES
 };
-},{}],16:[function(require,module,exports){
+},{}],18:[function(require,module,exports){
 var DomEvents = require('./../domevents');
 var Strings = require('./../_variables/strings');
-var RouteController = require('./../_controllers/routecontroller');
 var Constants = require('./../_variables/constants');
+var RouteController = require('./../_controllers/routecontroller');
+var SendController = require('./../_controllers/sendcontroller');
+
 
 var SearchView = function(){
 	var goButtonText = Strings.GO_BUTTON_TEXT;
@@ -747,109 +862,50 @@ var ResultView = function() {
 			});
 
 			fragment.appendChild(routeContainer);
+		},
 
-			// var cardContainer = document.createElement('div');
-			// var cardInfo = document.createElement('div');
-			// var cardImageContainer = document.createElement('div');
-			// var cardImage = document.createElement('img');
-			// var cardName = document.createElement('h3');
-			// var address = document.createElement('p');
-			// var addToRouteButton = document.createElement('button');
+		resultsAsSend: function(fragment) {
+			var sendContainer = document.createElement('div');
+			var sendInfo = document.createElement('div');
+			var sendOptionMessage = document.createElement('h3');
+			var sendInputGroup = document.createElement('div');
+			var sendInput = document.createElement('input');
+			var sendButtonSpan = document.createElement('span');
+			var sendButton = document.createElement('button');
 
-			// if (result.mainPhotoUrl) {
-			// 	cardImage.setAttribute('src', result.mainPhotoUrl);
-			// } else {
-			// 	var location = result.geometry.location.lat + "," + result.geometry.location.lng;
-			// 	cardImage.setAttribute('src', 'https://maps.googleapis.com/maps/api/streetview?size=600x300&location=' + location + '&heading=200&&fov=100&pitch=20&key=AIzaSyBgESRsFdB2XZSZtPhiVnKWzG0JeR-nGGM');
-			// }
+			sendButton.innerHTML = Strings.SEND_BUTTON_TEXT;
+			sendButton.addEventListener('click', function(e){
+				var emailAddress = document.getElementById('email-input').value;
+				if (emailAddress.length > 0) {
+					SendController.sendRoutesToEmail(emailAddress);
+				}
+			});
 
-			// cardImage.setAttribute('alt', 'A photo of ' + result.name);
-			// cardImage.setAttribute('title', 'Click to view in map');
+			sendButton.setAttribute('class','btn');
+			sendButton.innerHTML = '<i class=\"glyphicon glyphicon-send\" aria-label=\"' + Strings.EMAIL_OPTION_TEXT + '\"></i>';	
 
-			// cardImageContainer.setAttribute('class', 'cardImageContainer');
-			// cardImageContainer.appendChild(cardImage);
+			sendButtonSpan.setAttribute('class', 'input-group-btn');
+			sendButtonSpan.appendChild(sendButton);
 
-			// cardImageContainer.addEventListener('click', function(){
-			// 	MapController.setCenter(result.geometry.location);
-			// 	MapController.closeAllInfoWindows();
+			sendInput.setAttribute('id', 'email-input');
+			sendInput.setAttribute('class', 'form-control');
+			sendInput.setAttribute('placeholder', 'name@example.com');
+			sendInput.setAttribute('type', 'email');
 
-			// 	var searchInput = document.getElementById('search-input');
-			// 	var query = searchInput.value;
+			sendInputGroup.setAttribute('class', 'input-group');
+			sendInputGroup.appendChild(sendInput);
+			sendInputGroup.appendChild(sendButtonSpan);
 
-			// 	var index = Globals.zenPlacesResultCache[query].indexOf(result.id);
-			// 	MapController.showInfoWindow(index+1);
-			// });
+			sendOptionMessage.innerHTML = Strings.EMAIL_OPTION_TEXT;
 
-			// cardName.innerHTML = result.name;
-			// address.innerHTML = result.formatted_address;
-			
-			// if (!result.options.inRoute) {
-			// 	addToRouteButton.setAttribute('class', 'btn btn-add');
-			// 	addToRouteButton.innerHTML = Strings.ADD_TO_ROUTE_TEXT;	
-			// } else {
-			// 	addToRouteButton.setAttribute('class', 'btn btn-remove');
-			// 	addToRouteButton.innerHTML = Strings.REMOVE_FROM_ROUTE_TEXT;	
-			// }
+			sendInfo.setAttribute('class', 'send-info');
+			sendInfo.appendChild(sendOptionMessage);
+			sendInfo.appendChild(sendInputGroup);
 
-			// addToRouteButton.addEventListener('click', function() {
-			// 	if (addToRouteButton.className === 'btn btn-add') {
-			// 		addToRouteButton.className = 'btn btn-remove'
-			// 		addToRouteButton.innerHTML = Strings.REMOVE_FROM_ROUTE_TEXT;
-			// 		result.options.inRoute = true;
-			// 		RouteController.addToRoute(result);
-			// 		MapController.composeRouteCircle(result);
-			// 	} else {
-			// 		addToRouteButton.className = 'btn btn-add'
-			// 		addToRouteButton.innerHTML = Strings.ADD_TO_ROUTE_TEXT;
-			// 		result.options.inRoute = false;
-			// 		RouteController.removeFromRoute(result);	
-			// 		MapController.removeRouteCircle(result);
+			sendContainer.setAttribute('class', 'send-container');
+			sendContainer.appendChild(sendInfo);
 
-			// 		var resultsContainer = document.getElementById('results');
-			// 		resultsContainer.innerHTML = '';
-			// 		Object.keys(Globals.route).forEach(function(key, index){
-			// 			var placeDetails = Globals.route[key];
-			// 			var resultFragment = document.createDocumentFragment();
-			// 			FragmentController.composeResultFragment(resultFragment, placeDetails, Constants.ROUTE_RESULT_VIEW);
-			// 			resultsContainer.appendChild(resultFragment);
-			// 		});
-			// 	}
-
-			// 	if (Object.keys(Globals.route).length > 0) {
-			// 		ResultMenuController.enableResultMenuItem(Constants.RESULT_MENU_ROUTE);
-			// 		ResultMenuController.enableResultMenuItem(Constants.RESULT_MENU_SAVE);
-			// 	} else{
-			// 		ResultMenuController.disableResultMenuItem(Constants.RESULT_MENU_ROUTE);
-			// 		ResultMenuController.disableResultMenuItem(Constants.RESULT_MENU_SAVE);
-			// 		ResultMenuController.setResultMenuItemAsActive(Constants.RESULT_MENU_PLACES);
-			// 		var searchInput = document.getElementById('search-input');
-			// 		var query = searchInput.value;
-			// 		var resultsContainer = document.getElementById('results');
-			// 		resultsContainer.innerHTML = '';
-			// 		if (Globals.zenPlacesResultCache[query]) {
-			// 				Globals.zenPlacesResultCache[query].forEach(function(result, index){
-			// 					var placeDetails = Globals.zenPlaceDetailsCache[result];
-			// 					var resultFragment = document.createDocumentFragment();
-			// 					FragmentController.composeResultFragment(resultFragment, placeDetails, Constants.PLACES_RESULT_VIEW);
-			// 					resultsContainer.appendChild(resultFragment);
-			// 			});
-			// 		}
-			// 	}
-
-			// 	var [placeControl,routeControl,saveControl] = document.getElementsByClassName('nav navbar-nav')[0].children;
-			// 	routeControl.firstChild.innerHTML = Strings.ROUTES_BUTTON_TEXT + ' (' + Object.keys(Globals.route).length + ')';
-			// });
-
-			// cardInfo.setAttribute('class', 'card-info');
-			// cardInfo.appendChild(cardImageContainer); 
-			// cardInfo.appendChild(cardName); 
-			// cardInfo.appendChild(address); 
-			// cardInfo.appendChild(addToRouteButton); 
-
-			// cardContainer.setAttribute('class', 'card-container');
-			// cardContainer.appendChild(cardInfo);
-
-			// fragment.appendChild(cardContainer);
+			fragment.appendChild(sendContainer);
 		}
 	}
 };
@@ -876,7 +932,7 @@ module.exports = {
 	ResultMenuView,
 	FullScreenView
 }
-},{"./../_controllers/routecontroller":11,"./../_variables/constants":13,"./../_variables/strings":15,"./../domevents":21}],17:[function(require,module,exports){
+},{"./../_controllers/routecontroller":11,"./../_controllers/sendcontroller":12,"./../_variables/constants":15,"./../_variables/strings":17,"./../domevents":22}],19:[function(require,module,exports){
 var Strings = require('./../_variables/strings');
 var Globals = require('./../_variables/globals');
 
@@ -922,7 +978,7 @@ module.exports = {
 }
 
 
-},{"./../_variables/globals":14,"./../_variables/strings":15}],18:[function(require,module,exports){
+},{"./../_variables/globals":16,"./../_variables/strings":17}],20:[function(require,module,exports){
 var DomEvents = require('./../domevents');
 var Strings = require('./../_variables/strings');
 var Constants = require('./../_variables/constants');
@@ -930,7 +986,7 @@ var Constants = require('./../_variables/constants');
 ResultMenuView = function(){
 	var placesButtonText = Strings.PLACES_BUTTON_TEXT;
 	var routesButtonText = Strings.ROUTES_BUTTON_TEXT;
-	var saveButtonText = Strings.SAVE_BUTTON_TEXT;
+	var sendButtonText = Strings.SEND_BUTTON_TEXT;
 
 	return {
 		resultMenuAsInline: function(fragment) {
@@ -940,7 +996,7 @@ ResultMenuView = function(){
 			navbar.setAttribute('class', 'navbar navbar-default');
 			navbarList.setAttribute('class', 'nav navbar-nav');
 
-			var menuItems = [placesButtonText,routesButtonText,saveButtonText];
+			var menuItems = [placesButtonText,routesButtonText,sendButtonText];
 
 			menuItems.forEach(function(result, index) {
 				var navBarListItem = document.createElement('li');
@@ -981,16 +1037,19 @@ ResultMenuView = function(){
 							
 							Object.keys(Globals.route).forEach(function(key, index){
 								var placeDetails = Globals.route[key];
-								var resultFragment = document.createDocumentFragment();
-								FragmentController.composeResultFragment(resultFragment, placeDetails, Constants.ROUTE_RESULT_VIEW);
-								resultsContainer.appendChild(resultFragment);
+								var routeFragment = document.createDocumentFragment();
+								FragmentController.composeResultFragment(routeFragment, placeDetails, Constants.ROUTE_RESULT_VIEW);
+								resultsContainer.appendChild(routeFragment);
 							});
 							
 						} else {
 							placeControl.classList.remove('active');
 							routeControl.classList.remove('active');
 							saveControl.classList.add('active');
-							// Create entry in mongo database with route_id | [route]
+
+							var sendFragment = document.createDocumentFragment();
+							FragmentController.composeResultFragment(sendFragment, null, Constants.SEND_RESULT_VIEW);
+							resultsContainer.appendChild(sendFragment);
 						}
 					}
 				});
@@ -1006,7 +1065,7 @@ ResultMenuView = function(){
 }();
 
 module.exports = ResultMenuView;
-},{"./../_variables/constants":13,"./../_variables/strings":15,"./../domevents":21}],19:[function(require,module,exports){
+},{"./../_variables/constants":15,"./../_variables/strings":17,"./../domevents":22}],21:[function(require,module,exports){
 ApiConnection = function() {
 	return {
 		connect: function(url, callbackName, globalFunction) {
@@ -1023,67 +1082,8 @@ ApiConnection = function() {
 }();
 
 module.exports = ApiConnection;
-},{}],20:[function(require,module,exports){
-var Globals = require('./_variables/globals');
-var Constants = require('./_variables/constants');
-
-CacheUtility = function() {
-	var queryCacheKey = Constants.QUERY_CACHE_KEY;
-	var geocodeCacheKey = Constants.GEOCODE_CACHE_KEY;
-	var placesCacheKey = Constants.PLACES_CACHE_KEY;
-	var zenPlaceCacheKey = Constants.ZEN_PLACE_CACHE_KEY;
-	var zenPlaceDetailsCacheKey = Constants.ZEN_PLACE_DETAILS_CACHE_KEY;
-	var zenPlacesResultCacheKey = Constants.ZEN_PLACES_RESULT_CACHE_KEY;
-
-	return {
-		storeQuery: function(query) {
-			Globals.queryCache.unshift(query);
-			localStorage.setItem(queryCacheKey, JSON.stringify(Globals.queryCache));
-		},
-		clearQueryCache: function() {
-			localStorage[queryCacheKey] = '';
-		},
-		storeGeocodeCoordinates: function(query, coordinates) {
-			Globals.geocodeCache[query] = coordinates;
-			localStorage.setItem(geocodeCacheKey, JSON.stringify(Globals.geocodeCache));
-		},
-		clearGeocodeCache: function() {
-			localStorage[geocodeCacheKey] = '';
-		},
-		storePlacesResult: function(coordinates, result) {
-			Globals.placesCache[coordinates] = result;
-			localStorage.setItem(placesCacheKey, JSON.stringify(Globals.placesCache));
-		},
-		clearPlacesCache: function() {
-			localStorage[placesCacheKey] = '';
-		},
-		storeZenPlaceResult: function(placeId, result) {
-			Globals.zenPlaceCache[placeId] = result;
-			localStorage.setItem(zenPlaceCacheKey, JSON.stringify(Globals.zenPlaceCache));
-		},
-		clearZenPlaceCache: function() {
-			localStorage[zenPlaceCacheKey] = '';
-		},
-		storeZenPlaceDetailsResult: function(zenPlaceId, result) {
-			Globals.zenPlaceDetailsCache[zenPlaceId] = result;
-			localStorage.setItem(zenPlaceDetailsCacheKey, JSON.stringify(Globals.zenPlaceDetailsCache));
-		},
-		clearZenPlaceDetailsCache: function() {
-			localStorage[zenPlaceDetailsCacheKey] = '';
-		},
-		storeZenPlacesResult: function(query, result) {
-			Globals.zenPlacesResultCache[query] = result;
-			localStorage.setItem(zenPlacesResultCacheKey, JSON.stringify(Globals.zenPlacesResultCache));
-		},
-		clearZenPlacesResultCache: function() {
-			localStorage[zenPlacesResultCacheKey] = '';
-		}	
-	}
-}();
-
-module.exports = CacheUtility;
-},{"./_variables/constants":13,"./_variables/globals":14}],21:[function(require,module,exports){
-var CacheUtility = require('./cacheutility');
+},{}],22:[function(require,module,exports){
+var CacheUtility = require('./_utility/cacheutility');
 var MapController = require('./_controllers/mapcontroller');
 var MapView = require('./_views/mapview');
 var Constants = require('./_variables/constants');
@@ -1207,7 +1207,7 @@ SearchEvents = function() {
 module.exports = {
 	SearchEvents
 };
-},{"./_classes/zenplace":4,"./_controllers/geocodecontroller":6,"./_controllers/mapcontroller":7,"./_controllers/placedetailscontroller":8,"./_controllers/placescontroller":9,"./_controllers/resultmenucontroller":10,"./_controllers/routecontroller":11,"./_utility/apputility":12,"./_variables/constants":13,"./_variables/globals":14,"./_variables/strings":15,"./_views/mapview":17,"./cacheutility":20}],22:[function(require,module,exports){
+},{"./_classes/zenplace":4,"./_controllers/geocodecontroller":6,"./_controllers/mapcontroller":7,"./_controllers/placedetailscontroller":8,"./_controllers/placescontroller":9,"./_controllers/resultmenucontroller":10,"./_controllers/routecontroller":11,"./_utility/apputility":13,"./_utility/cacheutility":14,"./_variables/constants":15,"./_variables/globals":16,"./_variables/strings":17,"./_views/mapview":19}],23:[function(require,module,exports){
 'use strict';
 var ApiConnection = require('./apiconnection');
 var Globals = require('./_variables/globals.js');
@@ -1268,4 +1268,4 @@ function initComponents() {
 	map.mapTypes.set('map_style', styledMap);
 	map.setMapTypeId('map_style');
 };
-},{"./_controllers/fragmentcontroller.js":5,"./_variables/constants":13,"./_variables/globals.js":14,"./_variables/strings":15,"./apiconnection":19,"./domevents":21}]},{},[22]);
+},{"./_controllers/fragmentcontroller.js":5,"./_variables/constants":15,"./_variables/globals.js":16,"./_variables/strings":17,"./apiconnection":21,"./domevents":22}]},{},[23]);

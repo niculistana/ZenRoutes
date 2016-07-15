@@ -1,5 +1,5 @@
-var CacheUtility = require('../cacheutility');
-var GeocodeService = require('../_apiservices/geocodeservice');
+var CacheUtility = require('./../_utility/cacheutility');
+var GeocodeService = require('./../_apiservices/geocodeservice');
 
 GeocodeController = function() {
 	return{

@@ -99,6 +99,9 @@ body {
   background-color: #fffff;
   border: 0; }
 
+.welcome-message {
+  padding: 10px; }
+
 .header {
   position: fixed;
   width: 100%;
@@ -181,7 +184,7 @@ body {
 
 .card-container {
   background-color: #fff;
-  margin-bottom: 2px; }
+  margin-bottom: 4px; }
   .card-container .card-info {
     padding: 10px; }
     .card-container .card-info .card-image-container {
@@ -218,6 +221,20 @@ body {
       width: auto;
       display: inline-block;
       float: right; }
+
+.send-container {
+  background-color: #fff;
+  margin-bottom: 2px; }
+  .send-container .send-info {
+    padding: 10px; }
+    .send-container .send-info h3 {
+      font-size: 12px;
+      display: inline-block; }
+    .send-container .send-info span input {
+      font-size: 12px;
+      height: 48px !important; }
+    .send-container .send-info span button {
+      padding: 8px 24px; }
 
 .route-container:last-of-type {
   margin-bottom: 60px; }

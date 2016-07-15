@@ -7,8 +7,10 @@ const PLACES_BUTTON_TEXT = 'PLACES';
 const ADD_TO_ROUTE_TEXT = 'ADD TO ROUTE';
 const REMOVE_FROM_ROUTE_TEXT = 'REMOVE FROM ROUTE';
 const ROUTES_BUTTON_TEXT = 'ROUTE';
-const SAVE_BUTTON_TEXT = 'SAVE';
+const SEND_BUTTON_TEXT = 'SEND';
 const SETTINGS_BUTTON_TEXT = 'SETTINGS';
+
+const EMAIL_OPTION_TEXT = 'Email routes to a friend';
 
 const TRAVEL_QUOTES = ['Adventure is worthwhile. – Aesop',
  'A journey is best measured in friends, rather than miles. – Tim Cahill',
@@ -30,8 +32,9 @@ module.exports = {
 	ADD_TO_ROUTE_TEXT,
 	REMOVE_FROM_ROUTE_TEXT,
 	ROUTES_BUTTON_TEXT,
-	SAVE_BUTTON_TEXT,
+	SEND_BUTTON_TEXT,
 	SETTINGS_BUTTON_TEXT,
+	EMAIL_OPTION_TEXT,
 	TRAVEL_QUOTES,
 	NO_ROUTES
 };

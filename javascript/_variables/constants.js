@@ -6,6 +6,7 @@ const RESULT_MARKER = 'resultMarker';
 
 const PLACES_RESULT_VIEW = 'placesResultView';
 const ROUTE_RESULT_VIEW = 'routesResultView';
+const SEND_RESULT_VIEW = 'sendResultView';
 
 const RESULT_MENU_PLACES = 'resultMenuPlaces';
 const RESULT_MENU_ROUTE = 'resultMenuRoute';
@@ -28,6 +29,7 @@ module.exports = {
 	RESULT_MARKER,
 	PLACES_RESULT_VIEW,
 	ROUTE_RESULT_VIEW,
+	SEND_RESULT_VIEW,
 	RESULT_MENU_PLACES,
 	RESULT_MENU_ROUTE,
 	RESULT_MENU_SAVE,

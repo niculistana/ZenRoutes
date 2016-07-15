@@ -7,10 +7,7 @@ AppUtility = function(){
 
 	return {
 		generateMetaTag: function() {
-			var m = document.createElement('meta'); 
-			m.name = 'description'; 
-			m.content = 'This tutorial has some helpful information for you, if you want to track how many hits come from browsers where JavaScript has been disabled.'; 
-			document.head.appendChild(m);
+			// TODO: generates dynamic meta tags based on user location, for seo
 		},
 		generateZenPlaceId: function(){
 			var uniqueId = 'xxxxxxxxxxxxxxxxxxxxzpxxxxxxxxxx'.replace(/[x]/g, function(c) {
