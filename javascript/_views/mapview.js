@@ -38,9 +38,6 @@ var MarkerView = function() {
 	}
 };
 
-// var InfoWindowView = function(map, resultList) {
-// };
-
 module.exports = {
 	MarkerView
 }

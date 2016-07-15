@@ -19,7 +19,7 @@ GeocodeService = function() {
 }();
 
 module.exports = GeocodeService;
-},{"./../_variables/globals":13,"./../cacheutility":18}],2:[function(require,module,exports){
+},{"./../_variables/globals":14,"./../cacheutility":20}],2:[function(require,module,exports){
 PlaceDetailsService = function() {
 	return {
 		getPlaceDetailsFromPlaceId: function(placeId, callback) {
@@ -114,12 +114,6 @@ FragmentController = function() {
 			}
 		},
 
-		composeResultMenuFragment: function (fragment, view) {
-			if (view === Constants.INLINE) {
-				FragmentView.ResultMenuView().resultMenuAsInline(fragment);
-			}
-		},
-
 		composeFullScreenFragment: function (fragment, view) {
 			if (view === Constants.DELAY) {
 				FragmentView.FullScreenView().fullScreenAsDelay(fragment);
@@ -131,7 +125,7 @@ FragmentController = function() {
 }();
 
 module.exports = FragmentController;
-},{"./../_variables/constants":12,"./../_views/fragmentview":15}],6:[function(require,module,exports){
+},{"./../_variables/constants":13,"./../_views/fragmentview":16}],6:[function(require,module,exports){
 var CacheUtility = require('../cacheutility');
 var GeocodeService = require('../_apiservices/geocodeservice');
 
@@ -148,7 +142,7 @@ GeocodeController = function() {
 }();
 
 module.exports = GeocodeController;
-},{"../_apiservices/geocodeservice":1,"../cacheutility":18}],7:[function(require,module,exports){
+},{"../_apiservices/geocodeservice":1,"../cacheutility":20}],7:[function(require,module,exports){
 var Globals = require('./../_variables/globals');
 var Constants = require('./../_variables/constants');
 var MapView = require('./../_views/mapview');
@@ -180,7 +174,9 @@ MapController = function() {
 
 			var marker = Globals.markers[index];
 
-			var contentItems = (typeof result === 'string') ? result : result.name;
+			var resultContentString = (result.website) ? ('<a href=' + result.website + '>' + result.name + '</a>') : result.name;
+
+			var contentItems = (typeof result === 'string') ? result : resultContentString;
 			var content = contentItems;
 
 			infoWindow.setContent(content);
@@ -245,7 +241,7 @@ MapController = function() {
 }();
 
 module.exports = MapController;
-},{"./../_variables/constants":12,"./../_variables/globals":13,"./../_views/mapview":16}],8:[function(require,module,exports){
+},{"./../_variables/constants":13,"./../_variables/globals":14,"./../_views/mapview":17}],8:[function(require,module,exports){
 var Globals = require('../_variables/globals');
 var CacheUtility = require('../cacheutility');
 var PlaceDetailsService = require('../_apiservices/placedetailsservice');
@@ -281,7 +277,7 @@ PlaceDetailsController = function() {
 }();
 
 module.exports = PlaceDetailsController;
-},{"../_apiservices/placedetailsservice":2,"../_classes/zenplace":4,"../_utility/apputility":11,"../_variables/globals":13,"../cacheutility":18}],9:[function(require,module,exports){
+},{"../_apiservices/placedetailsservice":2,"../_classes/zenplace":4,"../_utility/apputility":12,"../_variables/globals":14,"../cacheutility":20}],9:[function(require,module,exports){
 var PlacesService = require('../_apiservices/placesservice');
 
 PlacesController = function() {
@@ -297,6 +293,81 @@ PlacesController = function() {
 
 module.exports = PlacesController;
 },{"../_apiservices/placesservice":3}],10:[function(require,module,exports){
+var Constants = require('./../_variables/constants');
+var ResultMenuView = require('./../_views/resultmenuview');
+var Strings = require('./../_variables/strings');
+
+ResultMenuController = function() {
+	var mainContent = document.getElementById('main-content');
+
+	return {
+		composeResultMenuFragment: function (fragment, view) {
+			if (view === Constants.INLINE) {
+				ResultMenuView.resultMenuAsInline(fragment)
+			}
+		},
+
+		enableResultMenuItem:function(menuItem){
+			var [placeControl,routeControl,saveControl] = document.getElementsByClassName('nav navbar-nav')[0].children;
+			if (menuItem === Constants.RESULT_MENU_PLACES) {
+				placeControl.classList.remove('disabled');
+			} else if(menuItem === Constants.RESULT_MENU_ROUTE) {
+				routeControl.classList.remove('disabled');
+			} else if (menuItem === Constants.RESULT_MENU_SAVE) {
+				saveControl.classList.remove('disabled');
+			}
+		},
+
+		disableResultMenuItem:function(menuItem){
+			var [placeControl,routeControl,saveControl] = document.getElementsByClassName('nav navbar-nav')[0].children;
+
+			if (menuItem === Constants.RESULT_MENU_PLACES) {
+				placeControl.classList.add('disabled');
+			} else if(menuItem === Constants.RESULT_MENU_ROUTE) {
+				routeControl.classList.add('disabled');
+				routeControl.setAttribute('title',Strings.NO_ROUTES);
+			} else if (menuItem === Constants.RESULT_MENU_SAVE) {
+				saveControl.classList.add('disabled');
+				saveControl.setAttribute('title',Strings.NO_ROUTES);
+			}
+		},
+
+		setResultMenuItemAsActive:function(menuItem){
+			var [placeControl,routeControl,saveControl] = document.getElementsByClassName('nav navbar-nav')[0].children;
+			if (menuItem === Constants.RESULT_MENU_PLACES) {
+				placeControl.classList.add('active');
+				routeControl.classList.remove('active');
+				saveControl.classList.remove('active');
+			} else if (menuItem === Constants.RESULT_MENU_ROUTE) {
+				placeControl.classList.remove('active');
+				routeControl.classList.add('active');
+				saveControl.classList.remove('active');
+			} else if (menuItem === Constants.RESULT_MENU_SAVE) {
+				placeControl.classList.remove('active');
+				routeControl.classList.remove('active');
+				saveControl.classList.add('active');
+			} 
+		},
+
+		updateResultMenuFragment:function(fragment,view){
+			if (view === Constants.RESULT_MENU_PLACES) {
+				ResultMenuView.resultMenuAsPlacesActive(fragment);
+			} else if (view === Constants.RESULT_MENU_ROUTE) {
+				ResultMenuView.resultMenuAsRouteActive(fragment);
+			} else if (view === Constants.RESULT_MENU_SAVE) {
+				ResultMenuView.resultMenuAsSaveActive(fragment);
+			}
+		}
+	};
+}();
+
+module.exports = ResultMenuController;
+
+// active, disabled, disabled
+// '', active, ''
+// active, '', ''
+// '', '', active
+},{"./../_variables/constants":13,"./../_variables/strings":15,"./../_views/resultmenuview":18}],11:[function(require,module,exports){
 var Globals = require('../_variables/globals');
 
 RouteController = function() {
@@ -314,7 +385,7 @@ RouteController = function() {
 }();
 
 module.exports = RouteController;
-},{"../_variables/globals":13}],11:[function(require,module,exports){
+},{"../_variables/globals":14}],12:[function(require,module,exports){
 AppUtility = function(){
 		if (typeof(Number.prototype.toRad) === 'undefined') {
 			Number.prototype.toRad = function() {
@@ -354,7 +425,7 @@ AppUtility = function(){
 }();
 
 module.exports = AppUtility;
-},{}],12:[function(require,module,exports){
+},{}],13:[function(require,module,exports){
 const INLINE = 'inline';
 const DEFAULT = 'default';
 
@@ -363,6 +434,10 @@ const RESULT_MARKER = 'resultMarker';
 
 const PLACES_RESULT_VIEW = 'placesResultView';
 const ROUTE_RESULT_VIEW = 'routesResultView';
+
+const RESULT_MENU_PLACES = 'resultMenuPlaces';
+const RESULT_MENU_ROUTE = 'resultMenuRoute';
+const RESULT_MENU_SAVE = 'resultMenuSave';
 
 const DELAY = 'delay';
 const DIM = 'dim';
@@ -381,6 +456,9 @@ module.exports = {
 	RESULT_MARKER,
 	PLACES_RESULT_VIEW,
 	ROUTE_RESULT_VIEW,
+	RESULT_MENU_PLACES,
+	RESULT_MENU_ROUTE,
+	RESULT_MENU_SAVE,
 	DELAY,
 	DIM,
 	QUERY_CACHE_KEY,
@@ -390,7 +468,7 @@ module.exports = {
 	ZEN_PLACE_DETAILS_CACHE_KEY,
 	ZEN_PLACES_RESULT_CACHE_KEY
 };
-},{}],13:[function(require,module,exports){
+},{}],14:[function(require,module,exports){
 var Constants = require('./constants');
 
 Globals = function () {
@@ -414,7 +492,7 @@ Globals = function () {
 }();
 
 module.exports = Globals;
-},{"./constants":12}],14:[function(require,module,exports){
+},{"./constants":13}],15:[function(require,module,exports){
 const SEARCH_PLACEHOLDER_TEXT = 'Which city are you visiting?'
 
 const LOADING_RESULTS = 'Hang on for a sec while we gather places to go to...';
@@ -437,6 +515,7 @@ const TRAVEL_QUOTES = ['Adventure is worthwhile. – Aesop',
  'Travel is the only thing you buy that makes you richer. – Anonymous',
  'Traveling tends to magnify all human emotions. — Peter Hoeg'];
 
+const NO_ROUTES = 'You currently have no routes selected, add a route to activate this control.';
 
 module.exports = {
 	SEARCH_PLACEHOLDER_TEXT,
@@ -448,9 +527,10 @@ module.exports = {
 	ROUTES_BUTTON_TEXT,
 	SAVE_BUTTON_TEXT,
 	SETTINGS_BUTTON_TEXT,
-	TRAVEL_QUOTES
+	TRAVEL_QUOTES,
+	NO_ROUTES
 };
-},{}],15:[function(require,module,exports){
+},{}],16:[function(require,module,exports){
 var DomEvents = require('./../domevents');
 var Strings = require('./../_variables/strings');
 var RouteController = require('./../_controllers/routecontroller');
@@ -528,8 +608,9 @@ var ResultView = function() {
 			}
 
 			cardImage.setAttribute('alt', 'A photo of ' + result.name);
+			cardImage.setAttribute('title', 'Click to view in map');
 
-			cardImageContainer.setAttribute('class', 'cardImageContainer');
+			cardImageContainer.setAttribute('class', 'card-image-container');
 			cardImageContainer.appendChild(cardImage);
 
 			cardImageContainer.addEventListener('click', function(){
@@ -545,8 +626,6 @@ var ResultView = function() {
 
 			cardName.innerHTML = result.name;
 			address.innerHTML = result.formatted_address;
-
-			result.options.inRoute = false;
 			
 			if (!result.options.inRoute) {
 				addToRouteButton.setAttribute('class', 'btn btn-add');
@@ -557,9 +636,8 @@ var ResultView = function() {
 			}
 
 			addToRouteButton.addEventListener('click', function() {
-				var [placeControl,routeControl,saveControl] = document.getElementsByClassName('nav navbar-nav')[0].children;
 				if (addToRouteButton.className === 'btn btn-add') {
-					addToRouteButton.className = 'btn btn-remove'
+					addToRouteButton.className = 'btn btn-remove';
 					addToRouteButton.innerHTML = Strings.REMOVE_FROM_ROUTE_TEXT;
 					result.options.inRoute = true;
 					RouteController.addToRoute(result);
@@ -568,19 +646,39 @@ var ResultView = function() {
 					addToRouteButton.className = 'btn btn-add'
 					addToRouteButton.innerHTML = Strings.ADD_TO_ROUTE_TEXT;
 					result.options.inRoute = false;
-					RouteController.removeFromRoute(result);	
+					RouteController.removeFromRoute(result);
 					MapController.removeRouteCircle(result);
 				}
 				
-				routeControl.className = (Object.keys(Globals.route).length > 0) ? '' : 'disabled';
-				routeControl.firstChild.innerHTML = (Object.keys(Globals.route).length > 0) ? Strings.ROUTES_BUTTON_TEXT + ' (' + Object.keys(Globals.route).length + ')' : Strings.ROUTES_BUTTON_TEXT;
-				saveControl.className = (Object.keys(Globals.route).length > 0) ? '' : 'disabled';
+				if (Object.keys(Globals.route).length > 0) {
+					ResultMenuController.enableResultMenuItem(Constants.RESULT_MENU_ROUTE);
+					ResultMenuController.enableResultMenuItem(Constants.RESULT_MENU_SAVE);
+				} else{
+					ResultMenuController.disableResultMenuItem(Constants.RESULT_MENU_ROUTE);
+					ResultMenuController.disableResultMenuItem(Constants.RESULT_MENU_SAVE);
+					ResultMenuController.setResultMenuItemAsActive(Constants.RESULT_MENU_PLACES);
+					var searchInput = document.getElementById('search-input');
+					var query = searchInput.value;
+					var resultsContainer = document.getElementById('results');
+					resultsContainer.innerHTML = '';
+					if (Globals.zenPlacesResultCache[query]) {
+							Globals.zenPlacesResultCache[query].forEach(function(result, index){
+							var placeDetails = Globals.zenPlaceDetailsCache[result];
+							var resultFragment = document.createDocumentFragment();
+							FragmentController.composeResultFragment(resultFragment, placeDetails, Constants.PLACES_RESULT_VIEW);
+							resultsContainer.appendChild(resultFragment);
+						});
+					}
+				}
+
+				var [placeControl,routeControl,saveControl] = document.getElementsByClassName('nav navbar-nav')[0].children;
+				routeControl.firstChild.innerHTML = Strings.ROUTES_BUTTON_TEXT + ' (' + Object.keys(Globals.route).length + ')';
 			});
 
 			cardInfo.setAttribute('class', 'card-info');
 			cardInfo.appendChild(cardImageContainer); 
 			cardInfo.appendChild(cardName); 
-			cardInfo.appendChild(address); 
+			cardInfo.appendChild(address);
 			cardInfo.appendChild(addToRouteButton); 
 
 			cardContainer.setAttribute('class', 'card-container');
@@ -590,154 +688,168 @@ var ResultView = function() {
 		},
 
 		resultsAsRoute: function(fragment, result) {
-			var cardContainer = document.createElement('div');
-			var cardInfo = document.createElement('div');
-			var cardImageContainer = document.createElement('div');
-			var cardImage = document.createElement('img');
-			var cardName = document.createElement('h3');
-			var address = document.createElement('p');
+			var routeContainer = document.createElement('div');
+			var routeInfo = document.createElement('div');
+			var routeName = document.createElement('h3');
 			var addToRouteButton = document.createElement('button');
 
-			if (result.mainPhotoUrl) {
-				cardImage.setAttribute('src', result.mainPhotoUrl);
-			} else {
-				var location = result.geometry.location.lat + "," + result.geometry.location.lng;
-				cardImage.setAttribute('src', 'https://maps.googleapis.com/maps/api/streetview?size=600x300&location=' + location + '&heading=200&&fov=100&pitch=20&key=AIzaSyBgESRsFdB2XZSZtPhiVnKWzG0JeR-nGGM');
-			}
+			addToRouteButton.setAttribute('class', 'btn btn-remove');
+			addToRouteButton.innerHTML = '<i class=\"glyphicon glyphicon-remove\" aria-label=\"' + Strings.REMOVE_FROM_ROUTE_TEXT + '\"></i>';	
 
-			cardImage.setAttribute('alt', 'A photo of ' + result.name);
+			routeName.innerHTML = result.name;
 
-			cardImageContainer.setAttribute('class', 'cardImageContainer');
-			cardImageContainer.appendChild(cardImage);
+			routeInfo.setAttribute('class', 'route-info');
+			routeInfo.appendChild(routeName);
+			routeInfo.appendChild(addToRouteButton);
 
-			cardImageContainer.addEventListener('click', function(){
-				MapController.setCenter(result.geometry.location);
-				MapController.closeAllInfoWindows();
-
-				var searchInput = document.getElementById('search-input');
-				var query = searchInput.value;
-
-				var index = Globals.zenPlacesResultCache[query].indexOf(result.id);
-				MapController.showInfoWindow(index+1);
-			});
-
-			cardName.innerHTML = result.name;
-			address.innerHTML = result.formatted_address;
-			
-			if (!result.options.inRoute) {
-				addToRouteButton.setAttribute('class', 'btn btn-add');
-				addToRouteButton.innerHTML = Strings.ADD_TO_ROUTE_TEXT;	
-			} else {
-				addToRouteButton.setAttribute('class', 'btn btn-remove');
-				addToRouteButton.innerHTML = Strings.REMOVE_FROM_ROUTE_TEXT;	
-			}
+			routeContainer.setAttribute('class', 'route-container');
+			routeContainer.appendChild(routeInfo);
 
 			addToRouteButton.addEventListener('click', function() {
-				var [placeControl,routeControl,saveControl] = document.getElementsByClassName('nav navbar-nav')[0].children;
-				if (addToRouteButton.className === 'btn btn-add') {
-					addToRouteButton.className = 'btn btn-remove'
-					addToRouteButton.innerHTML = Strings.REMOVE_FROM_ROUTE_TEXT;
-					result.options.inRoute = true;
-					RouteController.addToRoute(result);
-					MapController.composeRouteCircle(result);
-				} else {
-					addToRouteButton.className = 'btn btn-add'
-					addToRouteButton.innerHTML = Strings.ADD_TO_ROUTE_TEXT;
-					result.options.inRoute = false;
-					RouteController.removeFromRoute(result);	
-					MapController.removeRouteCircle(result);
-				}
-				
-				routeControl.className = (Object.keys(Globals.route).length > 0) ? '' : 'disabled';
-				routeControl.firstChild.innerHTML = (Object.keys(Globals.route).length > 0) ? Strings.ROUTES_BUTTON_TEXT + ' (' + Object.keys(Globals.route).length + ')' : Strings.ROUTES_BUTTON_TEXT;
-				saveControl.className = (Object.keys(Globals.route).length > 0) ? '' : 'disabled';
-			});
+				addToRouteButton.className = 'btn btn-add'
+				addToRouteButton.innerHTML = Strings.ADD_TO_ROUTE_TEXT;
+				result.options.inRoute = false;
+				RouteController.removeFromRoute(result);	
+				MapController.removeRouteCircle(result);
 
-			cardInfo.setAttribute('class', 'card-info');
-			cardInfo.appendChild(cardImageContainer); 
-			cardInfo.appendChild(cardName); 
-			cardInfo.appendChild(address); 
-			cardInfo.appendChild(addToRouteButton); 
-
-			cardContainer.setAttribute('class', 'card-container');
-			cardContainer.appendChild(cardInfo);
-
-			fragment.appendChild(cardContainer);
-		}
-	}
-};
-
-var ResultMenuView = function() {
-	var placesButtonText = Strings.PLACES_BUTTON_TEXT;
-	var routesButtonText = Strings.ROUTES_BUTTON_TEXT;
-	var saveButtonText = Strings.SAVE_BUTTON_TEXT;
-
-	return {
-		resultMenuAsInline: function(fragment, result) {
-			var navbar = document.createElement('nav');
-			var navbarList = document.createElement('ul');
-
-			navbar.setAttribute('class', 'navbar navbar-default');
-			navbarList.setAttribute('class', 'nav navbar-nav');
-
-			var menuItems = [placesButtonText,routesButtonText,saveButtonText];
-
-			menuItems.forEach(function(result, index) {
-				var navBarListItem = document.createElement('li');
-				var navBarListItemLink = document.createElement('a');
-				if (index === 0) {
-					navBarListItem.setAttribute('class', 'active');
-				} else {
-					navBarListItem.setAttribute('class', 'disabled');
-				}
-				navBarListItemLink.innerHTML = result;
-
-				navBarListItemLink.addEventListener('click', function(e){
-					if (e.target.parentElement.className !== 'disabled' && e.target.parentElement.className !== 'active') {
-						var listLength = e.target.parentElement.parentElement.children.length;
-						for (var i=0; i < listLength; i++) {
-							if (e.target.parentElement.parentElement.children[i].className === 'active') {
-								e.target.parentElement.parentElement.children[i].className = '';
-							}
-						}
-						e.target.parentElement.className = 'active';
-					}
-
-					if (e.target.parentElement.className !== 'disabled') {
-						var searchInput = document.getElementById('search-input');
-						var query = searchInput.value;
-						var resultsContainer = document.getElementById('results');
-						resultsContainer.innerHTML = '';
-
-						if (result === placesButtonText) {
-							if (Globals.zenPlacesResultCache[query]) {
-								Globals.zenPlacesResultCache[query].forEach(function(result, index){
-									var placeDetails = Globals.zenPlaceDetailsCache[result];
-									var resultFragment = document.createDocumentFragment();
-									FragmentController.composeResultFragment(resultFragment, placeDetails, Constants.PLACES_RESULT_VIEW);
-									resultsContainer.appendChild(resultFragment);
-								});
-							}
-						}else if (result === routesButtonText) {
-							Object.keys(Globals.route).forEach(function(key, index){
-								var placeDetails = Globals.route[key];
-								var resultFragment = document.createDocumentFragment();
-								FragmentController.composeResultFragment(resultFragment, placeDetails, Constants.ROUTE_RESULT_VIEW);
-								resultsContainer.appendChild(resultFragment);
-							});
-						} else {
-							console.log('save')
-							// Create entry in mongo database with route_id | [route]
-						}
-					}
+				var resultsContainer = document.getElementById('results');
+				resultsContainer.innerHTML = '';
+				Object.keys(Globals.route).forEach(function(key, index){
+					var placeDetails = Globals.route[key];
+					var resultFragment = document.createDocumentFragment();
+					FragmentController.composeResultFragment(resultFragment, placeDetails, Constants.ROUTE_RESULT_VIEW);
+					resultsContainer.appendChild(resultFragment);
 				});
 
-				navBarListItem.appendChild(navBarListItemLink);
-				navbarList.appendChild(navBarListItem);
+				if (Object.keys(Globals.route).length > 0) {
+					ResultMenuController.enableResultMenuItem(Constants.RESULT_MENU_ROUTE);
+					ResultMenuController.enableResultMenuItem(Constants.RESULT_MENU_SAVE);
+				} else{
+					ResultMenuController.disableResultMenuItem(Constants.RESULT_MENU_ROUTE);
+					ResultMenuController.disableResultMenuItem(Constants.RESULT_MENU_SAVE);
+					ResultMenuController.setResultMenuItemAsActive(Constants.RESULT_MENU_PLACES);
+					var searchInput = document.getElementById('search-input');
+					var query = searchInput.value;
+					var resultsContainer = document.getElementById('results');
+					resultsContainer.innerHTML = '';
+					if (Globals.zenPlacesResultCache[query]) {
+							Globals.zenPlacesResultCache[query].forEach(function(result, index){
+								var placeDetails = Globals.zenPlaceDetailsCache[result];
+								var resultFragment = document.createDocumentFragment();
+								FragmentController.composeResultFragment(resultFragment, placeDetails, Constants.PLACES_RESULT_VIEW);
+								resultsContainer.appendChild(resultFragment);
+						});
+					}
+				}
+
+				var [placeControl,routeControl,saveControl] = document.getElementsByClassName('nav navbar-nav')[0].children;
+				routeControl.firstChild.innerHTML = Strings.ROUTES_BUTTON_TEXT + ' (' + Object.keys(Globals.route).length + ')';
 			});
 
-			navbar.appendChild(navbarList);
-			fragment.appendChild(navbar);
+			fragment.appendChild(routeContainer);
+
+			// var cardContainer = document.createElement('div');
+			// var cardInfo = document.createElement('div');
+			// var cardImageContainer = document.createElement('div');
+			// var cardImage = document.createElement('img');
+			// var cardName = document.createElement('h3');
+			// var address = document.createElement('p');
+			// var addToRouteButton = document.createElement('button');
+
+			// if (result.mainPhotoUrl) {
+			// 	cardImage.setAttribute('src', result.mainPhotoUrl);
+			// } else {
+			// 	var location = result.geometry.location.lat + "," + result.geometry.location.lng;
+			// 	cardImage.setAttribute('src', 'https://maps.googleapis.com/maps/api/streetview?size=600x300&location=' + location + '&heading=200&&fov=100&pitch=20&key=AIzaSyBgESRsFdB2XZSZtPhiVnKWzG0JeR-nGGM');
+			// }
+
+			// cardImage.setAttribute('alt', 'A photo of ' + result.name);
+			// cardImage.setAttribute('title', 'Click to view in map');
+
+			// cardImageContainer.setAttribute('class', 'cardImageContainer');
+			// cardImageContainer.appendChild(cardImage);
+
+			// cardImageContainer.addEventListener('click', function(){
+			// 	MapController.setCenter(result.geometry.location);
+			// 	MapController.closeAllInfoWindows();
+
+			// 	var searchInput = document.getElementById('search-input');
+			// 	var query = searchInput.value;
+
+			// 	var index = Globals.zenPlacesResultCache[query].indexOf(result.id);
+			// 	MapController.showInfoWindow(index+1);
+			// });
+
+			// cardName.innerHTML = result.name;
+			// address.innerHTML = result.formatted_address;
+			
+			// if (!result.options.inRoute) {
+			// 	addToRouteButton.setAttribute('class', 'btn btn-add');
+			// 	addToRouteButton.innerHTML = Strings.ADD_TO_ROUTE_TEXT;	
+			// } else {
+			// 	addToRouteButton.setAttribute('class', 'btn btn-remove');
+			// 	addToRouteButton.innerHTML = Strings.REMOVE_FROM_ROUTE_TEXT;	
+			// }
+
+			// addToRouteButton.addEventListener('click', function() {
+			// 	if (addToRouteButton.className === 'btn btn-add') {
+			// 		addToRouteButton.className = 'btn btn-remove'
+			// 		addToRouteButton.innerHTML = Strings.REMOVE_FROM_ROUTE_TEXT;
+			// 		result.options.inRoute = true;
+			// 		RouteController.addToRoute(result);
+			// 		MapController.composeRouteCircle(result);
+			// 	} else {
+			// 		addToRouteButton.className = 'btn btn-add'
+			// 		addToRouteButton.innerHTML = Strings.ADD_TO_ROUTE_TEXT;
+			// 		result.options.inRoute = false;
+			// 		RouteController.removeFromRoute(result);	
+			// 		MapController.removeRouteCircle(result);
+
+			// 		var resultsContainer = document.getElementById('results');
+			// 		resultsContainer.innerHTML = '';
+			// 		Object.keys(Globals.route).forEach(function(key, index){
+			// 			var placeDetails = Globals.route[key];
+			// 			var resultFragment = document.createDocumentFragment();
+			// 			FragmentController.composeResultFragment(resultFragment, placeDetails, Constants.ROUTE_RESULT_VIEW);
+			// 			resultsContainer.appendChild(resultFragment);
+			// 		});
+			// 	}
+
+			// 	if (Object.keys(Globals.route).length > 0) {
+			// 		ResultMenuController.enableResultMenuItem(Constants.RESULT_MENU_ROUTE);
+			// 		ResultMenuController.enableResultMenuItem(Constants.RESULT_MENU_SAVE);
+			// 	} else{
+			// 		ResultMenuController.disableResultMenuItem(Constants.RESULT_MENU_ROUTE);
+			// 		ResultMenuController.disableResultMenuItem(Constants.RESULT_MENU_SAVE);
+			// 		ResultMenuController.setResultMenuItemAsActive(Constants.RESULT_MENU_PLACES);
+			// 		var searchInput = document.getElementById('search-input');
+			// 		var query = searchInput.value;
+			// 		var resultsContainer = document.getElementById('results');
+			// 		resultsContainer.innerHTML = '';
+			// 		if (Globals.zenPlacesResultCache[query]) {
+			// 				Globals.zenPlacesResultCache[query].forEach(function(result, index){
+			// 					var placeDetails = Globals.zenPlaceDetailsCache[result];
+			// 					var resultFragment = document.createDocumentFragment();
+			// 					FragmentController.composeResultFragment(resultFragment, placeDetails, Constants.PLACES_RESULT_VIEW);
+			// 					resultsContainer.appendChild(resultFragment);
+			// 			});
+			// 		}
+			// 	}
+
+			// 	var [placeControl,routeControl,saveControl] = document.getElementsByClassName('nav navbar-nav')[0].children;
+			// 	routeControl.firstChild.innerHTML = Strings.ROUTES_BUTTON_TEXT + ' (' + Object.keys(Globals.route).length + ')';
+			// });
+
+			// cardInfo.setAttribute('class', 'card-info');
+			// cardInfo.appendChild(cardImageContainer); 
+			// cardInfo.appendChild(cardName); 
+			// cardInfo.appendChild(address); 
+			// cardInfo.appendChild(addToRouteButton); 
+
+			// cardContainer.setAttribute('class', 'card-container');
+			// cardContainer.appendChild(cardInfo);
+
+			// fragment.appendChild(cardContainer);
 		}
 	}
 };
@@ -764,7 +876,7 @@ module.exports = {
 	ResultMenuView,
 	FullScreenView
 }
-},{"./../_controllers/routecontroller":10,"./../_variables/constants":12,"./../_variables/strings":14,"./../domevents":19}],16:[function(require,module,exports){
+},{"./../_controllers/routecontroller":11,"./../_variables/constants":13,"./../_variables/strings":15,"./../domevents":21}],17:[function(require,module,exports){
 var Strings = require('./../_variables/strings');
 var Globals = require('./../_variables/globals');
 
@@ -805,15 +917,96 @@ var MarkerView = function() {
 	}
 };
 
-// var InfoWindowView = function(map, resultList) {
-// };
-
 module.exports = {
 	MarkerView
 }
 
 
-},{"./../_variables/globals":13,"./../_variables/strings":14}],17:[function(require,module,exports){
+},{"./../_variables/globals":14,"./../_variables/strings":15}],18:[function(require,module,exports){
+var DomEvents = require('./../domevents');
+var Strings = require('./../_variables/strings');
+var Constants = require('./../_variables/constants');
+
+ResultMenuView = function(){
+	var placesButtonText = Strings.PLACES_BUTTON_TEXT;
+	var routesButtonText = Strings.ROUTES_BUTTON_TEXT;
+	var saveButtonText = Strings.SAVE_BUTTON_TEXT;
+
+	return {
+		resultMenuAsInline: function(fragment) {
+			var navbar = document.createElement('nav');
+			var navbarList = document.createElement('ul');
+
+			navbar.setAttribute('class', 'navbar navbar-default');
+			navbarList.setAttribute('class', 'nav navbar-nav');
+
+			var menuItems = [placesButtonText,routesButtonText,saveButtonText];
+
+			menuItems.forEach(function(result, index) {
+				var navBarListItem = document.createElement('li');
+				var navBarListItemLink = document.createElement('a');
+				if (index === 0) {
+					navBarListItem.setAttribute('class', 'active');
+				} else {
+					navBarListItem.setAttribute('class', 'disabled');
+				}
+				navBarListItemLink.innerHTML = result;
+
+				navBarListItemLink.addEventListener('click', function(e){
+					if (e.target.parentElement.className !== 'disabled') {
+						var searchInput = document.getElementById('search-input');
+						var query = searchInput.value;
+						var resultsContainer = document.getElementById('results');
+						resultsContainer.innerHTML = '';
+
+						var [placeControl,routeControl,saveControl] = document.getElementsByClassName('nav navbar-nav')[0].children;
+
+						if (result === placesButtonText) {
+							placeControl.classList.add('active');
+							routeControl.classList.remove('active');
+							saveControl.classList.remove('active');
+
+							if (Globals.zenPlacesResultCache[query]) {
+								Globals.zenPlacesResultCache[query].forEach(function(result, index){
+									var placeDetails = Globals.zenPlaceDetailsCache[result];
+									var resultFragment = document.createDocumentFragment();
+									FragmentController.composeResultFragment(resultFragment, placeDetails, Constants.PLACES_RESULT_VIEW);
+									resultsContainer.appendChild(resultFragment);
+								});
+							}
+						}else if (result === routesButtonText) {
+							placeControl.classList.remove('active');
+							routeControl.classList.add('active');
+							saveControl.classList.remove('active');
+							
+							Object.keys(Globals.route).forEach(function(key, index){
+								var placeDetails = Globals.route[key];
+								var resultFragment = document.createDocumentFragment();
+								FragmentController.composeResultFragment(resultFragment, placeDetails, Constants.ROUTE_RESULT_VIEW);
+								resultsContainer.appendChild(resultFragment);
+							});
+							
+						} else {
+							placeControl.classList.remove('active');
+							routeControl.classList.remove('active');
+							saveControl.classList.add('active');
+							// Create entry in mongo database with route_id | [route]
+						}
+					}
+				});
+
+				navBarListItem.appendChild(navBarListItemLink);
+				navbarList.appendChild(navBarListItem);
+			});
+
+			navbar.appendChild(navbarList);
+			fragment.appendChild(navbar);
+		},
+	};
+}();
+
+module.exports = ResultMenuView;
+},{"./../_variables/constants":13,"./../_variables/strings":15,"./../domevents":21}],19:[function(require,module,exports){
 ApiConnection = function() {
 	return {
 		connect: function(url, callbackName, globalFunction) {
@@ -830,7 +1023,7 @@ ApiConnection = function() {
 }();
 
 module.exports = ApiConnection;
-},{}],18:[function(require,module,exports){
+},{}],20:[function(require,module,exports){
 var Globals = require('./_variables/globals');
 var Constants = require('./_variables/constants');
 
@@ -889,7 +1082,7 @@ CacheUtility = function() {
 }();
 
 module.exports = CacheUtility;
-},{"./_variables/constants":12,"./_variables/globals":13}],19:[function(require,module,exports){
+},{"./_variables/constants":13,"./_variables/globals":14}],21:[function(require,module,exports){
 var CacheUtility = require('./cacheutility');
 var MapController = require('./_controllers/mapcontroller');
 var MapView = require('./_views/mapview');
@@ -901,6 +1094,7 @@ var GeocodeController = require('./_controllers/geocodecontroller');
 var PlacesController = require('./_controllers/placescontroller');
 var PlaceDetailsController = require('./_controllers/placedetailscontroller');
 var RouteController = require('./_controllers/routecontroller');
+var ResultMenuController = require('./_controllers/resultmenucontroller');
 var Strings = require('./_variables/strings');
 
 SearchEvents = function() {
@@ -936,7 +1130,7 @@ SearchEvents = function() {
 				var resultsMenuFragment = document.createDocumentFragment();
 				var resultsMenu = document.getElementById('results-menu');
 				resultsMenu.innerHTML = '';
-				FragmentController.composeResultMenuFragment(resultsMenuFragment, Constants.INLINE);
+				ResultMenuController.composeResultMenuFragment(resultsMenuFragment, Constants.INLINE);
 				resultsMenu.appendChild(resultsMenuFragment);
 
 				resultsContainer.innerHTML = '';
@@ -951,6 +1145,8 @@ SearchEvents = function() {
 
 					Globals.zenPlacesResultCache[query].forEach(function(result, index){
 						var placeDetails = Globals.zenPlaceDetailsCache[result];
+						placeDetails.options.inRoute = false;
+
 						MapController.composeMarker(placeDetails, Constants.RESULT_MARKER);
 						MapController.composeInfoWindow(placeDetails, Globals.markers.length-1);
 
@@ -1011,7 +1207,7 @@ SearchEvents = function() {
 module.exports = {
 	SearchEvents
 };
-},{"./_classes/zenplace":4,"./_controllers/geocodecontroller":6,"./_controllers/mapcontroller":7,"./_controllers/placedetailscontroller":8,"./_controllers/placescontroller":9,"./_controllers/routecontroller":10,"./_utility/apputility":11,"./_variables/constants":12,"./_variables/globals":13,"./_variables/strings":14,"./_views/mapview":16,"./cacheutility":18}],20:[function(require,module,exports){
+},{"./_classes/zenplace":4,"./_controllers/geocodecontroller":6,"./_controllers/mapcontroller":7,"./_controllers/placedetailscontroller":8,"./_controllers/placescontroller":9,"./_controllers/resultmenucontroller":10,"./_controllers/routecontroller":11,"./_utility/apputility":12,"./_variables/constants":13,"./_variables/globals":14,"./_variables/strings":15,"./_views/mapview":17,"./cacheutility":20}],22:[function(require,module,exports){
 'use strict';
 var ApiConnection = require('./apiconnection');
 var Globals = require('./_variables/globals.js');
@@ -1072,4 +1268,4 @@ function initComponents() {
 	map.mapTypes.set('map_style', styledMap);
 	map.setMapTypeId('map_style');
 };
-},{"./_controllers/fragmentcontroller.js":5,"./_variables/constants":12,"./_variables/globals.js":13,"./_variables/strings":14,"./apiconnection":17,"./domevents":19}]},{},[20]);
+},{"./_controllers/fragmentcontroller.js":5,"./_variables/constants":13,"./_variables/globals.js":14,"./_variables/strings":15,"./apiconnection":19,"./domevents":21}]},{},[22]);

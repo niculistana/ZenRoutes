@@ -29,7 +29,9 @@ MapController = function() {
 
 			var marker = Globals.markers[index];
 
-			var contentItems = (typeof result === 'string') ? result : result.name;
+			var resultContentString = (result.website) ? ('<a href=' + result.website + '>' + result.name + '</a>') : result.name;
+
+			var contentItems = (typeof result === 'string') ? result : resultContentString;
 			var content = contentItems;
 
 			infoWindow.setContent(content);

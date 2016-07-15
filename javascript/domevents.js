@@ -9,6 +9,7 @@ var GeocodeController = require('./_controllers/geocodecontroller');
 var PlacesController = require('./_controllers/placescontroller');
 var PlaceDetailsController = require('./_controllers/placedetailscontroller');
 var RouteController = require('./_controllers/routecontroller');
+var ResultMenuController = require('./_controllers/resultmenucontroller');
 var Strings = require('./_variables/strings');
 
 SearchEvents = function() {
@@ -44,7 +45,7 @@ SearchEvents = function() {
 				var resultsMenuFragment = document.createDocumentFragment();
 				var resultsMenu = document.getElementById('results-menu');
 				resultsMenu.innerHTML = '';
-				FragmentController.composeResultMenuFragment(resultsMenuFragment, Constants.INLINE);
+				ResultMenuController.composeResultMenuFragment(resultsMenuFragment, Constants.INLINE);
 				resultsMenu.appendChild(resultsMenuFragment);
 
 				resultsContainer.innerHTML = '';
@@ -59,6 +60,8 @@ SearchEvents = function() {
 
 					Globals.zenPlacesResultCache[query].forEach(function(result, index){
 						var placeDetails = Globals.zenPlaceDetailsCache[result];
+						placeDetails.options.inRoute = false;
+
 						MapController.composeMarker(placeDetails, Constants.RESULT_MARKER);
 						MapController.composeInfoWindow(placeDetails, Globals.markers.length-1);
 

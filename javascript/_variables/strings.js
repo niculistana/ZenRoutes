@@ -20,6 +20,7 @@ const TRAVEL_QUOTES = ['Adventure is worthwhile. – Aesop',
  'Travel is the only thing you buy that makes you richer. – Anonymous',
  'Traveling tends to magnify all human emotions. — Peter Hoeg'];
 
+const NO_ROUTES = 'You currently have no routes selected, add a route to activate this control.';
 
 module.exports = {
 	SEARCH_PLACEHOLDER_TEXT,
@@ -31,5 +32,6 @@ module.exports = {
 	ROUTES_BUTTON_TEXT,
 	SAVE_BUTTON_TEXT,
 	SETTINGS_BUTTON_TEXT,
-	TRAVEL_QUOTES
+	TRAVEL_QUOTES,
+	NO_ROUTES
 };

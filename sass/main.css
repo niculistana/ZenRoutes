@@ -23,11 +23,8 @@ p, li {
   font-weight: 300; }
 
 a {
-  text-decoration: none;
+  text-decoration: underline;
   cursor: pointer; }
-
-a:hover {
-  text-decoration: underline; }
 
 body {
   background-image: url("../../assets/images/nyc_skyline.jpg");
@@ -150,47 +147,47 @@ body {
     .pac-container .pac-item span:nth-child(3) {
       display: none; }
 
-.resultsContainer {
+.results-container {
   background-color: #ccc;
   height: 550px; }
-  .resultsContainer #results {
+  .results-container #results {
     height: 550px;
     overflow: scroll; }
-  .resultsContainer #results-menu {
+  .results-container #results-menu {
     position: relative;
     color: #fff;
     height: 50px;
     margin-top: -50px;
     overflow: hidden; }
-    .resultsContainer #results-menu .navbar-default {
+    .results-container #results-menu .navbar-default {
       background-color: #51484A;
       border-radius: 0;
       border: 0;
       white-space: nowrap; }
-      .resultsContainer #results-menu .navbar-default ul {
+      .results-container #results-menu .navbar-default ul {
         width: 100%;
         margin: 0px; }
-        .resultsContainer #results-menu .navbar-default ul li {
+        .results-container #results-menu .navbar-default ul li {
           float: left;
           width: 33.33%; }
-          .resultsContainer #results-menu .navbar-default ul li a {
+          .results-container #results-menu .navbar-default ul li a {
             color: #fff; }
-        .resultsContainer #results-menu .navbar-default ul li.active {
+        .results-container #results-menu .navbar-default ul li.active {
           height: auto; }
-          .resultsContainer #results-menu .navbar-default ul li.active a {
+          .results-container #results-menu .navbar-default ul li.active a {
             color: #000; }
-        .resultsContainer #results-menu .navbar-default ul li.disabled a {
+        .results-container #results-menu .navbar-default ul li.disabled a {
           color: #777; }
 
 .card-container {
   background-color: #fff;
-  margin-bottom: 10px; }
+  margin-bottom: 2px; }
   .card-container .card-info {
     padding: 10px; }
-    .card-container .card-info .cardImageContainer {
+    .card-container .card-info .card-image-container {
       display: inline-block;
       overflow: hidden; }
-      .card-container .card-info .cardImageContainer img {
+      .card-container .card-info .card-image-container img {
         width: 100%;
         height: auto;
         -webkit-transition: all .75s ease;
@@ -198,7 +195,7 @@ body {
         -ms-transition: all .75s ease;
         -o-transition: all .75s ease;
         transition: all .75s ease; }
-      .card-container .card-info .cardImageContainer img:hover {
+      .card-container .card-info .card-image-container img:hover {
         -webkit-transform: scale(1.25);
         -moz-transform: scale(1.25);
         -ms-transform: scale(1.25);
@@ -207,6 +204,22 @@ body {
         cursor: pointer; }
 
 .card-container:last-of-type {
+  margin-bottom: 60px; }
+
+.route-container {
+  background-color: #fff;
+  margin-bottom: 2px; }
+  .route-container .route-info {
+    padding: 10px; }
+    .route-container .route-info h3 {
+      font-size: 12px;
+      display: inline-block; }
+    .route-container .route-info button {
+      width: auto;
+      display: inline-block;
+      float: right; }
+
+.route-container:last-of-type {
   margin-bottom: 60px; }
 
 .fullscreen {

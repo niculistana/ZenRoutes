@@ -21,12 +21,6 @@ FragmentController = function() {
 			}
 		},
 
-		composeResultMenuFragment: function (fragment, view) {
-			if (view === Constants.INLINE) {
-				FragmentView.ResultMenuView().resultMenuAsInline(fragment);
-			}
-		},
-
 		composeFullScreenFragment: function (fragment, view) {
 			if (view === Constants.DELAY) {
 				FragmentView.FullScreenView().fullScreenAsDelay(fragment);

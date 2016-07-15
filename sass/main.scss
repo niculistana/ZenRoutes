@@ -23,12 +23,8 @@ p, li {
 }
 
 a {
-	text-decoration: none;
+	text-decoration:underline;
 	cursor: pointer;
-}
-
-a:hover {
-	text-decoration: underline;
 }
 
 body {
@@ -155,7 +151,7 @@ body {
 	}
 }
 
-.resultsContainer {
+.results-container {
 	background-color: #ccc;
 	height: 550px;
 
@@ -203,12 +199,12 @@ body {
 
 .card-container {
 	background-color: #fff;
-	margin-bottom: 10px;
+	margin-bottom: 2px;
 
 	.card-info {
 		padding: 10px;
 
-		.cardImageContainer {
+		.card-image-container {
 			display: inline-block;
 			overflow: hidden;
 
@@ -235,6 +231,27 @@ body {
 }
 
 .card-container:last-of-type{
+	margin-bottom: 60px;
+}
+
+.route-container {
+	background-color: #fff;
+	margin-bottom: 2px;
+	.route-info {
+		padding: 10px;
+		h3 {
+			font-size:12px;
+			display: inline-block;
+		}
+		button {
+			width: auto;
+			display: inline-block;
+			float: right;
+		}
+	}
+}
+
+.route-container:last-of-type{
 	margin-bottom: 60px;
 }
 

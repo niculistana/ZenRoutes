@@ -7,6 +7,10 @@ const RESULT_MARKER = 'resultMarker';
 const PLACES_RESULT_VIEW = 'placesResultView';
 const ROUTE_RESULT_VIEW = 'routesResultView';
 
+const RESULT_MENU_PLACES = 'resultMenuPlaces';
+const RESULT_MENU_ROUTE = 'resultMenuRoute';
+const RESULT_MENU_SAVE = 'resultMenuSave';
+
 const DELAY = 'delay';
 const DIM = 'dim';
 
@@ -24,6 +28,9 @@ module.exports = {
 	RESULT_MARKER,
 	PLACES_RESULT_VIEW,
 	ROUTE_RESULT_VIEW,
+	RESULT_MENU_PLACES,
+	RESULT_MENU_ROUTE,
+	RESULT_MENU_SAVE,
 	DELAY,
 	DIM,
 	QUERY_CACHE_KEY,
