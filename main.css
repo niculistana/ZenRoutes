@@ -1,3 +1,0 @@
-ul:before {
-	content: attr(aria-label);
-}

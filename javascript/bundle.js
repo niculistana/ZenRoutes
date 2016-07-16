@@ -364,11 +364,6 @@ ResultMenuController = function() {
 }();
 
 module.exports = ResultMenuController;
-
-// active, disabled, disabled
-// '', active, ''
-// active, '', ''
-// '', '', active
 },{"./../_variables/constants":15,"./../_variables/strings":17,"./../_views/resultmenuview":20}],11:[function(require,module,exports){
 var Globals = require('../_variables/globals');
 
@@ -394,33 +389,9 @@ SendController = function() {
 	return {
 		sendRoutesToNumber:function(number) {
 			var validNumber = '+' + number; // should probably add more validation than this...
-			// var message = 'Route for San Francisco, CA, US: ';
-
-			// for (var key in Globals.route) {
-			//     message+=(Globals.route[key].name) + ', ';
-			// }
-
-			// message = message.slice(0, -2);
-			// message += '. Safe travels! - Zenplaces';
-
-			// var client = require('twilio')('ACf5d77be2c47f19cbcc6d2773e46f5043', '338fbafb3c54199bc24b9a129f3acc8e');
-
-			// client.sms.messages.create({
-			// 	body: message,
-			// 	to: validNumber,
-			// 	from: "+16506677314"
-			// }, function(err, sms) {
-			// 	console.log(sms.sid);
-			// });
-
-			// client.sms.messages.create({
-			// 	body: '',
-			// 	to: '+14156132053',
-			// 	from: '+16506677314'
-			// }, function(err, sms) {
-			// 	console.log(sms.sid);
-			// });
+			// TODO
 		}, sendRoutesToEmail:function(email) {
+			// validate email using regex...
 			var message = '';
 			for (var key in Globals.route) {
 			    message+=(Globals.route[key].name) + ', ';
@@ -444,10 +415,7 @@ AppUtility = function(){
 
 	return {
 		generateMetaTag: function() {
-			var m = document.createElement('meta'); 
-			m.name = 'description'; 
-			m.content = 'This tutorial has some helpful information for you, if you want to track how many hits come from browsers where JavaScript has been disabled.'; 
-			document.head.appendChild(m);
+			// TODO: generates dynamic meta tags based on user location, for seo
 		},
 		generateZenPlaceId: function(){
 			var uniqueId = 'xxxxxxxxxxxxxxxxxxxxzpxxxxxxxxxx'.replace(/[x]/g, function(c) {
@@ -594,8 +562,6 @@ Globals = function () {
 		zenPlacesResult:[],
 		queryCache: (localStorage.getItem(Constants.QUERY_CACHE_KEY)) ? JSON.parse(localStorage.getItem(Constants.QUERY_CACHE_KEY)) : [],
 		geocodeCache: (localStorage.getItem(Constants.GEOCODE_CACHE_KEY)) ? JSON.parse(localStorage.getItem(Constants.GEOCODE_CACHE_KEY)) : {},
-		// placesCache: (localStorage.getItem(Constants.PLACES_CACHE_KEY)) ? JSON.parse(localStorage.getItem(Constants.PLACES_CACHE_KEY)) : {},
-		// zenPlaceCache: (localStorage.getItem(Constants.ZEN_PLACE_CACHE_KEY)) ? JSON.parse(localStorage.getItem(Constants.ZEN_PLACE_CACHE_KEY)) : {},
 		zenPlaceDetailsCache: (localStorage.getItem(Constants.ZEN_PLACE_DETAILS_CACHE_KEY)) ? JSON.parse(localStorage.getItem(Constants.ZEN_PLACE_DETAILS_CACHE_KEY)) : {},
 		zenPlacesResultCache: (localStorage.getItem(Constants.ZEN_PLACES_RESULT_CACHE_KEY)) ? JSON.parse(localStorage.getItem(Constants.ZEN_PLACES_RESULT_CACHE_KEY)) : {}
 	};
